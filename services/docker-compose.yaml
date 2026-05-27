@@ -15,23 +15,38 @@ services:
     environment:
       POSTGRES_USER: dse
       POSTGRES_PASSWORD: dse
-      POSTGRES_DB: utracked
     ports:
-      - "5433:5432"
+      - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U dse -d utracked"]
+      test: ["CMD-SHELL", "pg_isready -U dse"]
       interval: 10s
       timeout: 5s
       retries: 5
+    volumes:
+      - ./docker/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql
 
-  utracked:
+  brakenow:
     build:
-      context: utracked
-      dockerfile: src/main/docker/Dockerfile.jvm
+      context: brakenow
+      dockerfile: Dockerfile
     ports:
-      - "8081:8081"
+      - "8081:8080"
     environment:
-      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/utracked
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    profiles: [app]
+
+  orchestrator:
+    build:
+      context: orchestrator
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8080"
+    environment:
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/orchestrator
       QUARKUS_DATASOURCE_USERNAME: dse
       QUARKUS_DATASOURCE_PASSWORD: dse
       RABBITMQ_HOST: rabbitmq
@@ -41,14 +56,77 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+    profiles: [app]
 
-  whereami:
+  simulator:
     build:
-      context: whereami
-      dockerfile: src/main/docker/Dockerfile.jvm
+      context: simulator
+      dockerfile: Dockerfile
+    ports:
+      - "8083:8080"
     environment:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
     depends_on:
       rabbitmq:
         condition: service_healthy
+    profiles: [app]
+
+  sonar:
+    build:
+      context: sonar
+      dockerfile: Dockerfile
+    ports:
+      - "8084:8080"
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    profiles: [app]
+
+  spider:
+    build:
+      context: spider
+      dockerfile: Dockerfile
+    ports:
+      - "8085:8080"
+    profiles: [app]
+
+  utracked:
+    build:
+      context: utracked
+      dockerfile: Dockerfile
+    ports:
+      - "8086:8080"
+    environment:
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/utracked
+      QUARKUS_DATASOURCE_USERNAME: dse
+      QUARKUS_DATASOURCE_PASSWORD: dse
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles: [app]
+
+  whereami:
+    build:
+      context: whereami
+      dockerfile: Dockerfile
+    ports:
+      - "8087:8080"
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    profiles: [app]
+
+  storefront:
+    build:
+      context: storefront
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    profiles: [app]
