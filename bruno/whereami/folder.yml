@@ -1,0 +1,10 @@
+info:
+  name: wherami
+  type: folder
+  seq: 7
+
+request:
+  auth: inherit
+  variables:
+    - name: port
+      value: "8087"
