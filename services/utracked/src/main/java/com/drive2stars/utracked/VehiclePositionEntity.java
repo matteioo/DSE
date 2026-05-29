@@ -1,7 +1,10 @@
 package com.drive2stars.utracked;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import java.math.BigDecimal;
 
 
 /**
@@ -23,6 +26,14 @@ import jakarta.persistence.Entity;
  * }
  */
 @Entity
-public class MyEntity extends PanacheEntity {
-    public String field;
+@Table(name = "vehicle_position")
+public class VehiclePositionEntity extends PanacheEntity {
+
+    public String vin;
+
+    @Column(precision = 10, scale = 7)
+    public BigDecimal latitude;
+
+    @Column(precision = 10, scale = 7)
+    public BigDecimal longitude;
 }
