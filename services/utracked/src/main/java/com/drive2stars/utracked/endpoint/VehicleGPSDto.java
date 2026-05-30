@@ -1,4 +1,4 @@
-package com.drive2stars.utracked;
+package com.drive2stars.utracked.endpoint;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import java.math.BigDecimal;
