@@ -1,6 +1,9 @@
 services:
   rabbitmq:
     image: rabbitmq:3-management
+    environment:
+      RABBITMQ_DEFAULT_USER: dse
+      RABBITMQ_DEFAULT_PASS: dse
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -104,8 +107,12 @@ services:
       QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/utracked
       QUARKUS_DATASOURCE_USERNAME: dse
       QUARKUS_DATASOURCE_PASSWORD: dse
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
     depends_on:
       postgres:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     profiles: [app]
 
