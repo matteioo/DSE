@@ -6,5 +6,5 @@ info:
 request:
   auth: inherit
   variables:
-    - name: port
-      value: "8086"
+    - name: host
+      value: http://localhost:8086
