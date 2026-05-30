@@ -5,10 +5,10 @@ info:
 
 http:
   method: GET
-  url: "{{host}}/positions/{{vin}}/history?limit=4"
+  url: "{{host}}/positions/{{vin}}/history?limit=5"
   params:
     - name: limit
-      value: "4"
+      value: "5"
       type: query
   auth: inherit
 
