@@ -44,6 +44,7 @@ export const useSimulationStore = defineStore('simulation', () => {
   }
 
   function startPolling(intervalMs = 1000) {
+    if (pollTimer !== null) return
     fetchData()
     pollTimer = setInterval(fetchData, intervalMs)
   }

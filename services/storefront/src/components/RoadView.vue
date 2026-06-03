@@ -22,8 +22,8 @@ const followerX = computed(() => 32)
 const leadX = computed(() => followerX.value + pixelGap.value + CAR_W)
 
 function carColor(v: VehicleState | undefined): string {
-  if (!v) return '#4ade80'
-  return '#4ade80'
+  return v.emergencyBrakeActive ? '#ef4444' : '#4ade80'
+
 }
 
 function labelY(offset: number) {

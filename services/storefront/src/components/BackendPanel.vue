@@ -7,7 +7,7 @@ defineProps<{
 }>()
 
 function fmtDist(d: number | null): string {
-  return d !== null ? d.toFixed(1) + ' m' : '—'
+  return d === null ? '—' : d.toFixed(1) + ' m'
 }
 
 function fmtRate(r: number): string {
@@ -62,7 +62,7 @@ function levelMod(level: string): string {
     </div>
 
     <div class="sub-section">
-      <h3>ORCHESTRATOR Event Log</h3>
+      <h3>Event Log</h3>
       <div class="log-wrap">
         <table class="log-table">
           <thead>

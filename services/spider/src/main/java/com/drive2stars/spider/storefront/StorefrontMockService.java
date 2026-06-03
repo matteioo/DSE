@@ -33,7 +33,6 @@ public class StorefrontMockService {
     private static final double BASE_LAT           = 48.2082;
     private static final double BASE_LON           = 16.3738;
     private static final double LON_PER_METER      = 0.0000090;
-    private static final double MOCK_INITIAL_GAP_M = 120.0;
 
     @Inject
     UtrackedClient utrackedClient;
@@ -94,7 +93,7 @@ public class StorefrontMockService {
         lead.updatedAt            = now;
 
         VehicleStateDto follower = new VehicleStateDto();
-        follower.vin                  = posFollower.vin;D
+        follower.vin                  = posFollower.vin;
         follower.role                 = "FOLLOWER";
         follower.latitude             = posFollower.latitude;
         follower.longitude            = posFollower.longitude;
@@ -111,8 +110,11 @@ public class StorefrontMockService {
     private List<VehicleStateDto> buildMockVehicleStates() {
         long t = Instant.now().getEpochSecond() % 60;
 
-        double distance; double leadSpeed; double followerSpeed;
-        double distanceChange; boolean emergencyBrake;
+        double distance;
+        double leadSpeed;
+        double followerSpeed;
+        double distanceChange;
+        boolean emergencyBrake;
 
         if (t < 20) {
             distance = 80.0 - t * 2.0; leadSpeed = 80.0; followerSpeed = 84.0;
@@ -195,7 +197,7 @@ public class StorefrontMockService {
         events.add(event(now.minus(5,   ChronoUnit.SECONDS), "INFO", "SONAR",
             followerVin + " distance to front: " + fmt(follower != null ? follower.distanceToFrontM : null)));
         events.add(event(now.minus(10,  ChronoUnit.SECONDS), "INFO", "ORCHESTRATOR",
-            "Platoon active — lead: " + leadVin + ", follower: " + followerVin));
+            "lead: " + leadVin + ", follower: " + followerVin));
         events.add(event(now.minus(15,  ChronoUnit.SECONDS), "INFO", "UTRACKED",
             "GPS update received for " + leadVin + " and " + followerVin));
         events.add(event(now.minus(25,  ChronoUnit.SECONDS), "INFO", "ORCHESTRATOR",
