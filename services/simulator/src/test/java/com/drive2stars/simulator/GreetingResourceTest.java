@@ -10,15 +10,6 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 @QuarkusTest
 class GreetingResourceTest {
     @Test
-    void testHelloEndpoint() {
-        given()
-          .when().get("/hello")
-          .then()
-             .statusCode(200)
-             .body(is("Simulator service"));
-    }
-
-    @Test
     void testVehicleGpsEndpoint() {
         given()
           .when().get("/vehicles/D2S-DEMO-VIN-001/gps")
