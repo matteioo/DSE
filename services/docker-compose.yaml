@@ -125,9 +125,14 @@ services:
     environment:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
+      SIMULATOR_BASE_URL: http://simulator:8080
+      WHEREAMI_VIN: D2S-DEMO-VIN-002
+      WHEREAMI_POLL_INTERVAL: 10s
     depends_on:
       rabbitmq:
         condition: service_healthy
+      simulator:
+        condition: service_started
     profiles: [app]
 
   storefront:
