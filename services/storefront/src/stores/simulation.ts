@@ -10,13 +10,15 @@ export const useSimulationStore = defineStore('simulation', () => {
 
   const events = ref<EventLogEntry[]>([])
 
-  const loading = ref(false)
+  const loading = ref(true)
   const error = ref<string | null>(null)
 
   let pollTimer: ReturnType<typeof setInterval> | null = null
 
   async function fetchData() {
-    loading.value = true
+    const isInitial = vehicles.value.length === 0
+    if (isInitial) loading.value = true
+
     try {
       const [vehicleList, evts] = await Promise.all([
         spiderApi.getVehicles(),
@@ -37,7 +39,7 @@ export const useSimulationStore = defineStore('simulation', () => {
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Failed to reach Spider'
     } finally {
-      loading.value = false
+      if (isInitial) loading.value = false
     }
   }
 

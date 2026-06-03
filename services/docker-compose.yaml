@@ -95,6 +95,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8085:8080"
+    environment:
+      UTRACKED_URL: http://utracked:8080
     profiles: [app]
 
   utracked:

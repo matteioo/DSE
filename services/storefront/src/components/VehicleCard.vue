@@ -14,7 +14,7 @@ function stateMod(v: VehicleState): string {
 }
 
 function fmtDist(d: number | null): string {
-  return d !== null ? d.toFixed(1) + ' m' : '—'
+  return d === null ? '—' : d.toFixed(1) + ' m'
 }
 </script>
 
