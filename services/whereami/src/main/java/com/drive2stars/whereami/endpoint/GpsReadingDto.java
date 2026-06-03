@@ -1,4 +1,4 @@
-package com.drive2stars.whereami;
+package com.drive2stars.whereami.endpoint;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import java.math.BigDecimal;

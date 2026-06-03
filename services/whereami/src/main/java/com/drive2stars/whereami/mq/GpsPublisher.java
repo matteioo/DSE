@@ -1,5 +1,6 @@
-package com.drive2stars.whereami;
+package com.drive2stars.whereami.mq;
 
+import com.drive2stars.whereami.endpoint.GpsReadingDto;
 import io.smallrye.reactive.messaging.rabbitmq.OutgoingRabbitMQMetadata;
 import io.vertx.core.json.JsonObject;
 import jakarta.enterprise.context.ApplicationScoped;
