@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
 
 @QuarkusTest
 class GreetingResourceTest {
@@ -15,6 +16,25 @@ class GreetingResourceTest {
           .then()
              .statusCode(200)
              .body(is("Simulator service"));
+    }
+
+    @Test
+    void testVehicleGpsEndpoint() {
+        given()
+          .when().get("/vehicles/D2S-DEMO-VIN-001/gps")
+          .then()
+             .statusCode(200)
+             .body("vin", is("D2S-DEMO-VIN-001"))
+             .body("latitude", notNullValue())
+             .body("longitude", notNullValue());
+    }
+
+    @Test
+    void testUnknownVehicleGpsEndpoint() {
+        given()
+          .when().get("/vehicles/UNKNOWN/gps")
+          .then()
+             .statusCode(404);
     }
 
 }

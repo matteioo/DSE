@@ -1,0 +1,48 @@
+package com.drive2stars.whereami.service;
+
+import com.drive2stars.whereami.endpoint.GpsReadingDto;
+import com.drive2stars.whereami.endpoint.SimulatorGpsClient;
+import com.drive2stars.whereami.mq.GpsPublisher;
+import io.quarkus.scheduler.Scheduled;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.jboss.logging.Logger;
+
+@ApplicationScoped
+public class GpsPollingService {
+
+  private static final Logger LOG = Logger.getLogger(GpsPollingService.class);
+
+  @Inject
+  @RestClient
+  SimulatorGpsClient simulatorGpsClient;
+
+  @Inject
+  GpsPublisher gpsPublisher;
+
+  @ConfigProperty(name = "whereami.vin")
+  String vin;
+
+  @Scheduled(every = "{whereami.poll.interval}")
+  void publishCurrentPosition() {
+    fetchAndPublish(simulatorGpsClient, gpsPublisher, vin);
+  }
+
+  public void pollOnce() {
+    publishCurrentPosition();
+  }
+
+  static void fetchAndPublish(SimulatorGpsClient simulatorGpsClient, GpsPublisher gpsPublisher, String vin) {
+    try {
+      GpsReadingDto reading = simulatorGpsClient.getGps(vin);
+      gpsPublisher.publish(reading);
+    } catch (WebApplicationException e) {
+      LOG.errorf("Could not read GPS for VIN %s from simulator: HTTP %d", vin, e.getResponse().getStatus());
+    } catch (RuntimeException e) {
+      LOG.errorf(e, "Could not read GPS for VIN %s from simulator", vin);
+    }
+  }
+}
