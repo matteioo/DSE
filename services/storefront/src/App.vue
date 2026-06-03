@@ -66,12 +66,6 @@ nav a:hover {
   opacity: 1;
 }
 
-nav a.router-link-exact-active {
-  opacity: 1;
-  font-weight: 600;
-  background: var(--color-background);
-}
-
 main {
   flex: 1;
 }

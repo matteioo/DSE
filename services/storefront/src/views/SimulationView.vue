@@ -86,7 +86,6 @@ onUnmounted(() => store.stopPolling())
 }
 
 .badge.live   { background: #14532d; color: #4ade80; }
-.badge.muted  { background: var(--color-background-mute); color: var(--color-text); opacity: .65; }
 .badge.error  { background: #7f1d1d; color: #fca5a5; }
 
 .section {

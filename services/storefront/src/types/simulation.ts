@@ -1,6 +1,5 @@
 export interface VehicleState {
   vin: string
-  displayName: string
   role: string
   latitude: number
   longitude: number
