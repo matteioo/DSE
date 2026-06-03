@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class GpsPollingServiceTest {
 
   @Test
-  void fetchAndPublishReadsConfiguredVinAndPublishesGps() {
+  void fetchAndPublishUsesProvidedVinAndPublishesGps() {
     RecordingSimulatorGpsClient simulatorGpsClient = new RecordingSimulatorGpsClient();
     RecordingGpsPublisher gpsPublisher = new RecordingGpsPublisher();
 
