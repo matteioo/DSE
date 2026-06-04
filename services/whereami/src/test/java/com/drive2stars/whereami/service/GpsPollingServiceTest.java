@@ -1,5 +1,6 @@
 package com.drive2stars.whereami.service;
 
+import com.drive2stars.shared.messaging.GpsMessage;
 import com.drive2stars.whereami.endpoint.GpsReadingDto;
 import com.drive2stars.whereami.endpoint.SimulatorGpsClient;
 import com.drive2stars.whereami.mq.GpsPublisher;
@@ -7,6 +8,7 @@ import java.math.BigDecimal;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class GpsPollingServiceTest {
 
@@ -21,6 +23,7 @@ class GpsPollingServiceTest {
     assertEquals("D2S-DEMO-VIN-002", gpsPublisher.published.vin);
     assertEquals(new BigDecimal("48.2082000"), gpsPublisher.published.latitude);
     assertEquals(new BigDecimal("16.3721871"), gpsPublisher.published.longitude);
+    assertNotNull(gpsPublisher.published.timestamp);
   }
 
   private static class RecordingSimulatorGpsClient implements SimulatorGpsClient {
@@ -34,11 +37,11 @@ class GpsPollingServiceTest {
   }
 
   private static class RecordingGpsPublisher extends GpsPublisher {
-    GpsReadingDto published;
+    GpsMessage published;
 
     @Override
-    public void publish(GpsReadingDto reading) {
-      published = reading;
+    public void publish(GpsMessage message) {
+      published = message;
     }
   }
 }
