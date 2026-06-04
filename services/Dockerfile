@@ -1,18 +1,19 @@
+# syntax=docker/dockerfile:1
 FROM maven:3.9-eclipse-temurin-25 AS builder
 WORKDIR /app
 
 # Install shared module — cached until shared/pom.xml or shared/src changes
 COPY shared/pom.xml shared/pom.xml
 COPY shared/src shared/src
-RUN mvn -f shared/pom.xml install -q
+RUN --mount=type=cache,target=/root/.m2 mvn -f shared/pom.xml install -q
 
-# Download service dependencies — ARG not yet used, so this layer is also cached per service
+# Download service dependencies — layer cached per pom.xml; .m2 mount avoids re-downloading
 ARG SERVICE
 COPY ${SERVICE}/pom.xml pom.xml
-RUN mvn dependency:go-offline -q
+RUN --mount=type=cache,target=/root/.m2 mvn dependency:go-offline -q
 
 COPY ${SERVICE}/src src
-RUN mvn package -DskipTests -q
+RUN --mount=type=cache,target=/root/.m2 mvn package -DskipTests -q
 
 FROM registry.access.redhat.com/ubi9/openjdk-25-runtime:1.24
 COPY --from=builder --chown=185 /app/target/quarkus-app/ /deployments/
