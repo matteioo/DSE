@@ -14,19 +14,26 @@ public class DistanceMessage {
     public double distanceMeters;
     /** Negative = approaching, positive = receding. */
     public double changeRateMps;
+    public Direction direction;
     public Instant timestamp;
 
     public DistanceMessage() {}
 
-    public DistanceMessage(String vin, double distanceMeters, double changeRateMps, Instant timestamp) {
+    public DistanceMessage(String vin, double distanceMeters, double changeRateMps, Direction direction, Instant timestamp) {
         this.vin = vin;
         this.distanceMeters = distanceMeters;
         this.changeRateMps = changeRateMps;
+        this.direction = direction;
         this.timestamp = timestamp;
     }
 
     @Override
     public String toString() {
-        return "DistanceMessage{vin='" + vin + "', dist=" + distanceMeters + "m, rate=" + changeRateMps + "m/s, ts=" + timestamp + '}';
+        return "DistanceMessage{vin='" + vin + "', dist=" + distanceMeters + "m, rate=" + changeRateMps + "m/s, direction=" + direction + ", ts=" + timestamp + '}';
+    }
+
+    public enum Direction {
+        FRONT,
+        BACK
     }
 }
