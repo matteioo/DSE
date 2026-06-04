@@ -39,6 +39,10 @@ class GpsPollingServiceTest {
   private static class RecordingGpsPublisher extends GpsPublisher {
     GpsMessage published;
 
+    RecordingGpsPublisher() {
+      super(null);
+    }
+
     @Override
     public void publish(GpsMessage message) {
       published = message;

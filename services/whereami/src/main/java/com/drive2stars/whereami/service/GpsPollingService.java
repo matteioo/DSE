@@ -6,7 +6,6 @@ import com.drive2stars.whereami.endpoint.SimulatorGpsClient;
 import com.drive2stars.whereami.mq.GpsPublisher;
 import io.quarkus.scheduler.Scheduled;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 import java.time.Instant;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -18,15 +17,17 @@ public class GpsPollingService {
 
   private static final Logger LOG = Logger.getLogger(GpsPollingService.class);
 
-  @Inject
-  @RestClient
-  SimulatorGpsClient simulatorGpsClient;
+  private final SimulatorGpsClient simulatorGpsClient;
+  private final GpsPublisher gpsPublisher;
+  private final String vin;
 
-  @Inject
-  GpsPublisher gpsPublisher;
-
-  @ConfigProperty(name = "whereami.vin")
-  String vin;
+  public GpsPollingService(@RestClient SimulatorGpsClient simulatorGpsClient,
+                           GpsPublisher gpsPublisher,
+                           @ConfigProperty(name = "whereami.vin") String vin) {
+    this.simulatorGpsClient = simulatorGpsClient;
+    this.gpsPublisher = gpsPublisher;
+    this.vin = vin;
+  }
 
   @Scheduled(every = "{whereami.poll.interval}")
   void publishCurrentPosition() {

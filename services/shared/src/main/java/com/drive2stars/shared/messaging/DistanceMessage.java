@@ -13,20 +13,20 @@ public class DistanceMessage {
     public String vin;
     public double distanceMeters;
     /** Negative = approaching, positive = receding. */
-    public double changeRateMs;
+    public double changeRateMps;
     public Instant timestamp;
 
     public DistanceMessage() {}
 
-    public DistanceMessage(String vin, double distanceMeters, double changeRateMs, Instant timestamp) {
+    public DistanceMessage(String vin, double distanceMeters, double changeRateMps, Instant timestamp) {
         this.vin = vin;
         this.distanceMeters = distanceMeters;
-        this.changeRateMs = changeRateMs;
+        this.changeRateMps = changeRateMps;
         this.timestamp = timestamp;
     }
 
     @Override
     public String toString() {
-        return "DistanceMessage{vin='" + vin + "', dist=" + distanceMeters + "m, rate=" + changeRateMs + "m/s, ts=" + timestamp + '}';
+        return "DistanceMessage{vin='" + vin + "', dist=" + distanceMeters + "m, rate=" + changeRateMps + "m/s, ts=" + timestamp + '}';
     }
 }
