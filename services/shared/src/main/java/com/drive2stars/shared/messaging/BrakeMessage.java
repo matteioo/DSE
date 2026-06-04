@@ -6,7 +6,7 @@ import java.time.Instant;
 /**
  * RabbitMQ message published by BRAKENOW on exchange {@code d2s.vehicle.brake}.
  * Consumed by ORCHESTRATOR and SIMULATOR.
- *
+ * <br>
  * conditionTriggered: 1-3 = BRAKENOW local conditions, 4 = ORCHESTRATOR plausibility check.
  * active=false signals the brake has been cleared (distance > 100-200m).
  */
