@@ -4,7 +4,6 @@ import com.drive2stars.shared.messaging.GpsMessage;
 import io.smallrye.reactive.messaging.rabbitmq.OutgoingRabbitMQMetadata;
 import io.vertx.core.json.JsonObject;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.Message;
@@ -15,9 +14,11 @@ public class GpsPublisher {
 
   private static final Logger LOG = Logger.getLogger(GpsPublisher.class);
 
-  @Inject
-  @Channel("vehicle-gps")
-  Emitter<JsonObject> emitter;
+  private final Emitter<JsonObject> emitter;
+
+  public GpsPublisher(@Channel("vehicle-gps") Emitter<JsonObject> emitter) {
+    this.emitter = emitter;
+  }
 
   public void publish(GpsMessage message) {
     JsonObject payload = JsonObject.mapFrom(message);
