@@ -2,13 +2,12 @@ package com.drive2stars.utracked.endpoint;
 
 import com.drive2stars.utracked.service.VehicleService;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
+import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import java.util.List;
@@ -18,8 +17,11 @@ import java.util.List;
 @ApplicationScoped
 public class VehicleGPSResource {
 
-  @Inject
-  VehicleService vehicleService;
+  private final VehicleService vehicleService;
+
+  public VehicleGPSResource(VehicleService vehicleService) {
+    this.vehicleService = vehicleService;
+  }
 
   @GET
   public List<VehicleGPSDto> getLatestPositions() {
@@ -38,7 +40,7 @@ public class VehicleGPSResource {
 
   @GET
   @Path("/{vin}/history")
-  public List<VehicleGPSDto> getLatestPosition(@PathParam("vin") String vin, @QueryParam("limit") @DefaultValue("20") int limit) {
+  public List<VehicleGPSDto> getHistory(@PathParam("vin") String vin, @QueryParam("limit") @DefaultValue("20") int limit) {
     return vehicleService.getHistory(vin, limit);
   }
 }
