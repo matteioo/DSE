@@ -30,8 +30,10 @@ services:
 
   brakenow:
     build:
-      context: brakenow
+      context: .
       dockerfile: Dockerfile
+      args:
+        SERVICE: brakenow
     ports:
       - "8081:8080"
     environment:
@@ -44,8 +46,10 @@ services:
 
   orchestrator:
     build:
-      context: orchestrator
+      context: .
       dockerfile: Dockerfile
+      args:
+        SERVICE: orchestrator
     ports:
       - "8082:8080"
     environment:
@@ -63,8 +67,10 @@ services:
 
   simulator:
     build:
-      context: simulator
+      context: .
       dockerfile: Dockerfile
+      args:
+        SERVICE: simulator
     ports:
       - "8083:8080"
     environment:
@@ -77,8 +83,10 @@ services:
 
   sonar:
     build:
-      context: sonar
+      context: .
       dockerfile: Dockerfile
+      args:
+        SERVICE: sonar
     ports:
       - "8084:8080"
     environment:
@@ -91,8 +99,10 @@ services:
 
   spider:
     build:
-      context: spider
+      context: .
       dockerfile: Dockerfile
+      args:
+        SERVICE: spider
     ports:
       - "8085:8080"
     environment:
@@ -101,8 +111,10 @@ services:
 
   utracked:
     build:
-      context: utracked
+      context: .
       dockerfile: Dockerfile
+      args:
+        SERVICE: utracked
     ports:
       - "8086:8080"
     environment:
@@ -120,8 +132,10 @@ services:
 
   whereami:
     build:
-      context: whereami
+      context: .
       dockerfile: Dockerfile
+      args:
+        SERVICE: whereami
     ports:
       - "8087:8080"
     environment:
