@@ -8,7 +8,6 @@ import java.time.Instant;
 public class SonarSensorReadingDto {
 
   public String vin;
-  public String targetVin;
   public String direction;
   public BigDecimal radarDistanceMeters;
   public BigDecimal lidarDistanceMeters;
@@ -17,11 +16,10 @@ public class SonarSensorReadingDto {
 
   public SonarSensorReadingDto() {}
 
-  public SonarSensorReadingDto(String vin, String targetVin, String direction,
+  public SonarSensorReadingDto(String vin, String direction,
       BigDecimal radarDistanceMeters, BigDecimal lidarDistanceMeters,
       BigDecimal ultrasonicDistanceMeters, Instant measuredAt) {
     this.vin = vin;
-    this.targetVin = targetVin;
     this.direction = direction;
     this.radarDistanceMeters = radarDistanceMeters;
     this.lidarDistanceMeters = lidarDistanceMeters;

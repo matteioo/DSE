@@ -31,7 +31,7 @@ class SonarPollingServiceTest {
     assertFalse(simulatorSonarClient.allReadingsRequested);
     assertEquals(1, sonarPublisher.published.size());
     assertEquals("D2S-DEMO-VIN-002", sonarPublisher.published.getFirst().vin);
-    assertEquals("D2S-DEMO-VIN-001", sonarPublisher.published.getFirst().targetVin);
+    assertEquals("FRONT", sonarPublisher.published.getFirst().direction);
     assertEquals(new BigDecimal("100.00"), sonarPublisher.published.getFirst().distanceMeters);
   }
 
@@ -72,7 +72,7 @@ class SonarPollingServiceTest {
         simulatorSonarClient, sonarPublisher);
 
     sonarPollingService.processBackendRawReading(
-        reading("D2S-DEMO-VIN-002", "D2S-DEMO-VIN-001", "FRONT", "100.00", Instant.now()));
+        reading("D2S-DEMO-VIN-002", "FRONT", "100.00", Instant.now()));
 
     assertNull(simulatorSonarClient.requestedVin);
     assertEquals(1, sonarPublisher.published.size());
@@ -88,12 +88,12 @@ class SonarPollingServiceTest {
     Instant t5 = Instant.parse("2026-06-03T10:00:05Z");
     Instant t10 = Instant.parse("2026-06-03T10:00:10Z");
 
-    SonarPollingService.fuseReadings(List.of(reading("VIN-2", "VIN-1", "FRONT", "50.00", t0)),
+    SonarPollingService.fuseReadings(List.of(reading("VIN-2", "FRONT", "50.00", t0)),
         previousReadings);
     SonarReadingDto closing = SonarPollingService.fuseReadings(
-        List.of(reading("VIN-2", "VIN-1", "FRONT", "45.00", t5)), previousReadings).getFirst();
+        List.of(reading("VIN-2", "FRONT", "45.00", t5)), previousReadings).getFirst();
     SonarReadingDto opening = SonarPollingService.fuseReadings(
-        List.of(reading("VIN-2", "VIN-1", "FRONT", "55.00", t10)), previousReadings).getFirst();
+        List.of(reading("VIN-2", "FRONT", "55.00", t10)), previousReadings).getFirst();
 
     assertEquals(new BigDecimal("1.00"), closing.distanceChangeMetersPerSecond);
     assertEquals(new BigDecimal("-2.00"), opening.distanceChangeMetersPerSecond);
@@ -102,9 +102,9 @@ class SonarPollingServiceTest {
   @Test
   void rawReadingCompletenessRequiresAllRawSensorValuesAndTimestamp() {
     assertTrue(SonarPollingService.isCompleteRawReading(
-        reading("VIN-2", "VIN-1", "FRONT", "50.00", Instant.now())));
+        reading("VIN-2", "FRONT", "50.00", Instant.now())));
     assertFalse(SonarPollingService.isCompleteRawReading(
-        new SonarSensorReadingDto("VIN-2", "VIN-1", "FRONT", new BigDecimal("50.00"), null,
+        new SonarSensorReadingDto("VIN-2", "FRONT", new BigDecimal("50.00"), null,
             new BigDecimal("50.00"), Instant.now())));
   }
 
@@ -118,10 +118,10 @@ class SonarPollingServiceTest {
     return service;
   }
 
-  private static SonarSensorReadingDto reading(String vin, String targetVin, String direction,
-      String distance, Instant measuredAt) {
+  private static SonarSensorReadingDto reading(String vin, String direction, String distance,
+      Instant measuredAt) {
     BigDecimal distanceMeters = new BigDecimal(distance);
-    return new SonarSensorReadingDto(vin, targetVin, direction, distanceMeters, distanceMeters,
+    return new SonarSensorReadingDto(vin, direction, distanceMeters, distanceMeters,
         distanceMeters, measuredAt);
   }
 
@@ -132,15 +132,15 @@ class SonarPollingServiceTest {
     @Override
     public List<SonarSensorReadingDto> getVehicleReadings(String vin) {
       requestedVin = vin;
-      return List.of(reading(vin, "D2S-DEMO-VIN-001", "FRONT", "100.00", Instant.now()));
+      return List.of(reading(vin, "FRONT", "100.00", Instant.now()));
     }
 
     @Override
     public List<SonarSensorReadingDto> getAllReadings() {
       allReadingsRequested = true;
       return List.of(
-          reading("D2S-DEMO-VIN-001", "D2S-DEMO-VIN-002", "BACK", "100.00", Instant.now()),
-          reading("D2S-DEMO-VIN-002", "D2S-DEMO-VIN-001", "FRONT", "100.00", Instant.now()));
+          reading("D2S-DEMO-VIN-001", "BACK", "100.00", Instant.now()),
+          reading("D2S-DEMO-VIN-002", "FRONT", "100.00", Instant.now()));
     }
   }
 

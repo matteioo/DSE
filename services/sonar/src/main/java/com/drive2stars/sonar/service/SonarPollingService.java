@@ -96,7 +96,6 @@ public class SonarPollingService {
   public static boolean isCompleteRawReading(SonarSensorReadingDto reading) {
     return reading != null
         && reading.vin != null
-        && reading.targetVin != null
         && reading.direction != null
         && reading.radarDistanceMeters != null
         && reading.lidarDistanceMeters != null
@@ -117,14 +116,13 @@ public class SonarPollingService {
         continue;
       }
       Instant measuredAt = sensorReading.measuredAt == null ? Instant.now() : sensorReading.measuredAt;
-      String key = key(sensorReading.vin, sensorReading.targetVin, sensorReading.direction);
+      String key = key(sensorReading.vin, sensorReading.direction);
       PreviousReading previousReading = previousReadings.put(key,
           new PreviousReading(distanceMeters, measuredAt));
       BigDecimal distanceChangeMetersPerSecond =
           calculateDistanceChange(distanceMeters, measuredAt, previousReading);
       fusedReadings.add(new SonarReadingDto(
           sensorReading.vin,
-          sensorReading.targetVin,
           sensorReading.direction,
           distanceMeters,
           distanceChangeMetersPerSecond,
@@ -166,8 +164,8 @@ public class SonarPollingService {
         .divide(elapsedSeconds, 2, RoundingMode.HALF_UP);
   }
 
-  private static String key(String vin, String targetVin, String direction) {
-    return vin + "|" + targetVin + "|" + direction;
+  private static String key(String vin, String direction) {
+    return vin + "|" + direction;
   }
 
   private void publishVehicleReadings(String requestedVin) {
@@ -187,7 +185,7 @@ public class SonarPollingService {
   private List<SonarReadingDto> fuseAndCache(List<SonarSensorReadingDto> sensorReadings) {
     List<SonarReadingDto> readings = fuseReadings(sensorReadings, previousReadings);
     for (SonarReadingDto reading : readings) {
-      latestReadings.put(key(reading.vin, reading.targetVin, reading.direction), reading);
+      latestReadings.put(key(reading.vin, reading.direction), reading);
     }
     return readings;
   }

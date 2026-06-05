@@ -354,7 +354,6 @@ public class VehicleSimulationService {
         .setScale(2, RoundingMode.HALF_UP);
     return new SonarSensorReadingDto(
         source.vin(),
-        target.vin(),
         direction,
         offsetDistance(trueDistance, "0.30"),
         offsetDistance(trueDistance, "-0.10"),
