@@ -18,11 +18,11 @@ public class SonarRawPublishingService {
 
   @Scheduled(every = "{simulator.sonar.publish.interval}")
   void publishCurrentRawReadings() {
-    publishRawReadings(vehicleSimulationService.getAllSonarReadings(), rawSonarPublisher);
+    publishRawReadings(vehicleSimulationService.getOwnSonarReadings(), rawSonarPublisher);
   }
 
   public int publishOnce() {
-    return publishRawReadings(vehicleSimulationService.getAllSonarReadings(), rawSonarPublisher);
+    return publishRawReadings(vehicleSimulationService.getOwnSonarReadings(), rawSonarPublisher);
   }
 
   public static int publishRawReadings(List<SonarSensorReadingDto> readings,

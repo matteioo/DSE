@@ -18,8 +18,8 @@ class SonarRawPublishingServiceTest {
     RecordingRawSonarPublisher publisher = new RecordingRawSonarPublisher();
     Instant measuredAt = Instant.parse("2026-06-05T10:00:00Z");
     List<SonarSensorReadingDto> readings = List.of(
-        reading("VIN-1", "VIN-2", "FRONT", measuredAt),
-        reading("VIN-2", "VIN-1", "BACK", measuredAt));
+        reading("VIN-1", "FRONT", measuredAt),
+        reading("VIN-2", "BACK", measuredAt));
 
     int count = SonarRawPublishingService.publishRawReadings(readings, publisher);
 
@@ -27,7 +27,6 @@ class SonarRawPublishingServiceTest {
     assertEquals(2, publisher.published.size());
     SonarSensorReadingDto first = publisher.published.getFirst();
     assertEquals("VIN-1", first.vin);
-    assertEquals("VIN-2", first.targetVin);
     assertEquals("FRONT", first.direction);
     assertNotNull(first.radarDistanceMeters);
     assertNotNull(first.lidarDistanceMeters);
@@ -35,9 +34,8 @@ class SonarRawPublishingServiceTest {
     assertEquals(measuredAt, first.measuredAt);
   }
 
-  private static SonarSensorReadingDto reading(String vin, String targetVin, String direction,
-      Instant measuredAt) {
-    return new SonarSensorReadingDto(vin, targetVin, direction, new BigDecimal("10.30"),
+  private static SonarSensorReadingDto reading(String vin, String direction, Instant measuredAt) {
+    return new SonarSensorReadingDto(vin, direction, new BigDecimal("10.30"),
         new BigDecimal("9.90"), new BigDecimal("10.05"), measuredAt);
   }
 

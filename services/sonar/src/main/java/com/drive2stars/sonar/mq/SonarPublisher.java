@@ -32,8 +32,8 @@ public class SonarPublisher {
         .addMetadata(OutgoingRabbitMQMetadata.builder()
             .withContentType("application/json")
             .build()));
-    LOG.infof("Published SONAR for VIN %s to %s/%s: distance=%s, change=%s",
-        reading.vin, reading.direction, reading.targetVin, reading.distanceMeters,
+    LOG.infof("Published SONAR for VIN %s to %s: distance=%s, change=%s",
+        reading.vin, reading.direction, reading.distanceMeters,
         reading.distanceChangeMetersPerSecond);
   }
 
