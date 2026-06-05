@@ -24,7 +24,6 @@ public class VehicleDistanceConsumer {
 
   @Incoming("vehicle-distance")
   @Blocking
-  @Transactional
   public void process(byte[] raw) {
     DistanceMessage msg;
     try {
@@ -33,7 +32,7 @@ public class VehicleDistanceConsumer {
       LOG.errorf("Dropping malformed distance message: %s", e.getMessage());
       return;
     }
-    if (msg.vin == null || msg.direction == null || msg.timestamp == null) {
+    if (msg == null || msg.vin == null || msg.direction == null || msg.timestamp == null) {
       LOG.errorf("Dropping incomplete distance message: %s", msg);
       return;
     }
