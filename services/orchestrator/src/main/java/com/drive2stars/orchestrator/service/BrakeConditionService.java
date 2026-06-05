@@ -27,7 +27,7 @@ public class BrakeConditionService {
 
     public CompletableFuture<Void> checkSonarConditions(DistanceMessage msg) {
         return CompletableFuture.allOf(
-                CONDITIONS.stream()
+                CONDITIONS.stream().filter(_ -> msg.direction == DistanceMessage.Direction.FRONT)
                         .map(c -> CompletableFuture.runAsync(() -> {
                             if (msg.distanceMeters < c.distThreshold && msg.changeRateMps > c.rateThreshold) {
                                 triggerBrake(msg, c.id);
