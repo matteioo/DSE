@@ -21,6 +21,8 @@ public class BrakeMessage {
     public Source source;
     public Instant timestamp;
 
+    public BrakeMessage() {}
+
     public BrakeMessage(String vin, boolean active, int conditionTriggered, Source source, Instant timestamp) {
         this.vin = vin;
         this.active = active;
