@@ -43,6 +43,8 @@ services:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       UTRACKED_URL: http://utracked:8080
+      ORCHESTRATOR_SCENARIO_QUEUE_NAME: orchestrator.scenario
+      ORCHESTRATOR_RESET_GRACE_SECONDS: 15
     depends_on:
       postgres:
         condition: service_healthy
@@ -52,7 +54,7 @@ services:
         condition: service_started
     profiles: [app]
 
-  simulator:
+  simulator-vehicle-1:
     build:
       context: .
       dockerfile: Dockerfile
@@ -63,7 +65,40 @@ services:
     environment:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
-      SIMULATOR_SONAR_PUBLISH_INTERVAL: 10s
+      SIMULATOR_VIN: D2S-DEMO-VIN-001
+      SIMULATOR_POSITION: 1
+      SIMULATOR_SONAR_PUBLISH_INTERVAL: 1s
+      SIMULATOR_STATE_PUBLISH_INTERVAL: 500ms
+      SIMULATOR_PEER_STATE_MAX_AGE_SECONDS: 3
+      SIMULATOR_STATE_QUEUE_NAME: simulator.state.vehicle-1
+      SIMULATOR_SCENARIO_QUEUE_NAME: simulator.scenario.vehicle-1
+      SIMULATOR_BRAKE_QUEUE_NAME: simulator.brake.vehicle-1
+      SIMULATOR_BRAKE_ROUTING_KEY: brake.D2S-DEMO-VIN-001
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    profiles: [app]
+
+  simulator-vehicle-2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE: simulator
+    ports:
+      - "8091:8080"
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      SIMULATOR_VIN: D2S-DEMO-VIN-002
+      SIMULATOR_POSITION: 2
+      SIMULATOR_SONAR_PUBLISH_INTERVAL: 1s
+      SIMULATOR_STATE_PUBLISH_INTERVAL: 500ms
+      SIMULATOR_PEER_STATE_MAX_AGE_SECONDS: 3
+      SIMULATOR_STATE_QUEUE_NAME: simulator.state.vehicle-2
+      SIMULATOR_SCENARIO_QUEUE_NAME: simulator.scenario.vehicle-2
+      SIMULATOR_BRAKE_QUEUE_NAME: simulator.brake.vehicle-2
+      SIMULATOR_BRAKE_ROUTING_KEY: brake.D2S-DEMO-VIN-002
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -114,6 +149,7 @@ services:
       QUARKUS_DATASOURCE_PASSWORD: dse
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
+      UTRACKED_SCENARIO_QUEUE_NAME: utracked.scenario
     depends_on:
       postgres:
         condition: service_healthy
@@ -167,13 +203,13 @@ services:
     environment:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
-      SIMULATOR_BASE_URL: http://simulator:8080
+      SIMULATOR_BASE_URL: http://simulator-vehicle-1:8080
       WHEREAMI_VIN: D2S-DEMO-VIN-001
-      WHEREAMI_POLL_INTERVAL: 10s
+      WHEREAMI_POLL_INTERVAL: 1s
     depends_on:
       rabbitmq:
         condition: service_healthy
-      simulator:
+      simulator-vehicle-1:
         condition: service_started
     profiles: [app]
 
@@ -188,13 +224,13 @@ services:
     environment:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
-      SIMULATOR_BASE_URL: http://simulator:8080
+      SIMULATOR_BASE_URL: http://simulator-vehicle-2:8080
       WHEREAMI_VIN: D2S-DEMO-VIN-002
-      WHEREAMI_POLL_INTERVAL: 10s
+      WHEREAMI_POLL_INTERVAL: 1s
     depends_on:
       rabbitmq:
         condition: service_healthy
-      simulator:
+      simulator-vehicle-2:
         condition: service_started
     profiles: [ app ]
 
@@ -209,14 +245,14 @@ services:
     environment:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
-      SIMULATOR_BASE_URL: http://simulator:8080
+      SIMULATOR_BASE_URL: http://simulator-vehicle-1:8080
       SONAR_MODE: vehicle
       SONAR_VIN: D2S-DEMO-VIN-001
-      SONAR_POLL_INTERVAL: 10s
+      SONAR_POLL_INTERVAL: 1s
     depends_on:
       rabbitmq:
         condition: service_healthy
-      simulator:
+      simulator-vehicle-1:
         condition: service_started
     profiles: [ app ]
 
@@ -231,14 +267,14 @@ services:
     environment:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
-      SIMULATOR_BASE_URL: http://simulator:8080
+      SIMULATOR_BASE_URL: http://simulator-vehicle-2:8080
       SONAR_MODE: vehicle
       SONAR_VIN: D2S-DEMO-VIN-002
-      SONAR_POLL_INTERVAL: 10s
+      SONAR_POLL_INTERVAL: 1s
     depends_on:
       rabbitmq:
         condition: service_healthy
-      simulator:
+      simulator-vehicle-2:
         condition: service_started
     profiles: [ app ]
 
