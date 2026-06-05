@@ -17,10 +17,9 @@ public class BrakePublisher {
 
     private final Emitter<JsonObject> emitter;
 
-    public BrakePublisher(@Channel("brake-status") Emitter<JsonObject> emitter) {
-    this.emitter = emitter;
-  }
-
+    public BrakePublisher(@Channel("brake-in") Emitter<JsonObject> emitter) {
+        this.emitter = emitter;
+    }
 
     public void publish(BrakeMessage message) {
         JsonObject payload = JsonObject.mapFrom(message);

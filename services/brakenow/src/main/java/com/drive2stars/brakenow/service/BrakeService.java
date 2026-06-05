@@ -3,7 +3,7 @@ package com.drive2stars.brakenow.service;
 import com.drive2stars.brakenow.mq.BrakePublisher;
 import com.drive2stars.shared.messaging.BrakeMessage;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
+
 import java.time.Instant;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
@@ -39,12 +39,16 @@ public class BrakeService {
     @ConfigProperty(name = "brakenow.vin")
     String ownVin;
 
-    @Inject
-    BrakePublisher brakePublisher;
+
+    private final BrakePublisher brakePublisher;
 
     private final ConcurrentHashMap<String, BrakeState> states = new ConcurrentHashMap<>();
 
-    /**
+    public BrakeService(BrakePublisher brakePublisher) {
+      this.brakePublisher = brakePublisher;
+    }
+
+  /**
      * @param vin the vehicle this reading belongs to
      * @param distanceM  distance to the vehicle ahead in metres
      * @param closingMps closing rate in m/s, positive = approaching
