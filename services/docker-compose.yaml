@@ -58,11 +58,14 @@ services:
       QUARKUS_DATASOURCE_PASSWORD: dse
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
+      UTRACKED_URL: http://utracked:8080
     depends_on:
       postgres:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      utracked:
+        condition: service_started
     profiles: [app]
 
   simulator:
