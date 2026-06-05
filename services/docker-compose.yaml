@@ -79,6 +79,7 @@ services:
     environment:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
+      SIMULATOR_SONAR_PUBLISH_INTERVAL: 10s
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -98,7 +99,6 @@ services:
       SONAR_MODE: backend
       SONAR_RAW_CONSUMER_ENABLED: "true"
       SONAR_RAW_QUEUE_NAME: sonar.raw.backend
-      SONAR_POLL_INTERVAL: 10s
     depends_on:
       rabbitmq:
         condition: service_healthy
