@@ -104,52 +104,6 @@ services:
         condition: service_healthy
     profiles: [app]
 
-  sonar-vehicle-1:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        SERVICE: sonar
-    ports:
-      - "8088:8080"
-    environment:
-      RABBITMQ_HOST: rabbitmq
-      RABBITMQ_PORT: 5672
-      SIMULATOR_BASE_URL: http://simulator:8080
-      SONAR_MODE: vehicle
-      SONAR_VIN: D2S-DEMO-VIN-001
-      SONAR_RAW_CONSUMER_ENABLED: "false"
-      SONAR_POLL_INTERVAL: 10s
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-      simulator:
-        condition: service_started
-    profiles: [app]
-
-  sonar-vehicle-2:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        SERVICE: sonar
-    ports:
-      - "8089:8080"
-    environment:
-      RABBITMQ_HOST: rabbitmq
-      RABBITMQ_PORT: 5672
-      SIMULATOR_BASE_URL: http://simulator:8080
-      SONAR_MODE: vehicle
-      SONAR_VIN: D2S-DEMO-VIN-002
-      SONAR_RAW_CONSUMER_ENABLED: "false"
-      SONAR_POLL_INTERVAL: 10s
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-      simulator:
-        condition: service_started
-    profiles: [app]
-
   spider:
     build:
       context: .
@@ -183,7 +137,7 @@ services:
         condition: service_healthy
     profiles: [app]
 
-  whereami:
+  whereami-vehicle-1:
     build:
       context: .
       dockerfile: Dockerfile
@@ -203,6 +157,73 @@ services:
       simulator:
         condition: service_started
     profiles: [app]
+
+  whereami-vehicle-2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE: whereami
+    ports:
+      - "8088:8080"
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      SIMULATOR_BASE_URL: http://simulator:8080
+      WHEREAMI_VIN: D2S-DEMO-VIN-001
+      WHEREAMI_POLL_INTERVAL: 10s
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      simulator:
+        condition: service_started
+    profiles: [ app ]
+
+  sonar-vehicle-1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE: sonar
+    ports:
+      - "8089:8080"
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      SIMULATOR_BASE_URL: http://simulator:8080
+      SONAR_MODE: vehicle
+      SONAR_VIN: D2S-DEMO-VIN-001
+      SONAR_RAW_CONSUMER_ENABLED: "false"
+      SONAR_POLL_INTERVAL: 10s
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      simulator:
+        condition: service_started
+    profiles: [ app ]
+
+  sonar-vehicle-2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE: sonar
+    ports:
+      - "8090:8080"
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      SIMULATOR_BASE_URL: http://simulator:8080
+      SONAR_MODE: vehicle
+      SONAR_VIN: D2S-DEMO-VIN-002
+      SONAR_RAW_CONSUMER_ENABLED: "false"
+      SONAR_POLL_INTERVAL: 10s
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      simulator:
+        condition: service_started
+    profiles: [ app ]
 
   storefront:
     build:
