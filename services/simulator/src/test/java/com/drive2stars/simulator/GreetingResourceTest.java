@@ -50,8 +50,10 @@ class GreetingResourceTest {
           .then()
              .statusCode(200)
              .body("size()", is(2))
-             .body("vin", notNullValue())
-             .body("targetVin", notNullValue());
+             .body("[0].vin", notNullValue())
+             .body("[1].vin", notNullValue())
+             .body("[0].targetVin", notNullValue())
+             .body("[1].targetVin", notNullValue());
     }
 
     @Test
