@@ -41,7 +41,7 @@ public class BrakeConditionService {
   }
 
   void triggerBrake(DistanceMessage msg, int condition) {
-    brakeProducer.sendBrakeMessage(new BrakeMessage(msg.vin, true, condition, "ORCHESTRATOR", Instant.now()));
-    eventService.recordBrake(msg.vin);
+    brakeProducer.sendBrakeMessage(new BrakeMessage(msg.vin, true, condition, BrakeMessage.Source.ORCHESTRATOR, Instant.now()));
+    eventService.recordBrake(msg.vin, condition);
   }
 }

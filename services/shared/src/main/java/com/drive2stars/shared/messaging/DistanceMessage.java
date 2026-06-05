@@ -12,12 +12,10 @@ public class DistanceMessage {
 
     public String vin;
     public double distanceMeters;
-    /** Negative = approaching, positive = receding. */
+    /** Negative = receding, positive = approaching. */
     public double changeRateMps;
     public Direction direction;
     public Instant timestamp;
-
-    public DistanceMessage() {}
 
     public DistanceMessage(String vin, double distanceMeters, double changeRateMps, Direction direction, Instant timestamp) {
         this.vin = vin;
