@@ -11,11 +11,12 @@ import com.drive2stars.orchestrator.endpoint.UtrackedClient;
 import com.drive2stars.orchestrator.endpoint.VehiclePositionDto;
 import com.drive2stars.shared.messaging.DistanceMessage;
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -29,8 +30,15 @@ class PlausibilityServiceTest {
   UtrackedClient utrackedClient;
   @Mock
   BrakeConditionService brakeConditionService;
-  @InjectMocks
+  @Mock
+  SimulationResetStateService simulationResetStateService;
   PlausibilityService service;
+
+  @BeforeEach
+  void setUp() {
+    service = new PlausibilityService(utrackedClient, brakeConditionService,
+        simulationResetStateService, 15);
+  }
 
   private DistanceMessage msg(double distanceMeters) {
     return new DistanceMessage(VIN, distanceMeters, 5.0, DistanceMessage.Direction.FRONT,
@@ -60,6 +68,16 @@ class PlausibilityServiceTest {
   }
 
   // --- Condition 4 trigger ---
+
+  @Test
+  void condition4_skipped_during_reset_grace() {
+    when(simulationResetStateService.isWithinResetGrace(any(Duration.class))).thenReturn(true);
+
+    service.validateDistance(msg(200.0)).join();
+
+    verifyNoInteractions(utrackedClient);
+    verifyNoInteractions(brakeConditionService);
+  }
 
   @Test
   void condition4_triggers_when_sonar_deviates_significantly_from_gps() {
