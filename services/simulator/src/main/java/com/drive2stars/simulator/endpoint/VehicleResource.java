@@ -28,4 +28,10 @@ public class VehicleResource {
   public VehicleGpsDto getGps(@PathParam("vin") String vin) {
     return vehicleSimulationService.getGps(vin);
   }
+
+  @GET
+  @Path("/{vin}/sonar")
+  public List<SonarSensorReadingDto> getSonar(@PathParam("vin") String vin) {
+    return vehicleSimulationService.getSonarReadings(vin);
+  }
 }
