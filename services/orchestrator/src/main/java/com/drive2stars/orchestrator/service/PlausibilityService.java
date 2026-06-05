@@ -47,14 +47,6 @@ public class PlausibilityService {
       return;
     }
 
-    // derive heading direction
-    VehiclePositionDto currentPos = history.get(0);
-    VehiclePositionDto previousPos = history.get(1);
-    double headingDeltaLon = currentPos.longitude.doubleValue() - previousPos.longitude.doubleValue();
-    // headingDeltaLon > 0 = moving east, headingDeltaLon < 0 = moving west
-    // Currently unused in 2-vehicle simulation setup
-
-
     List<VehiclePositionDto> allPositions;
     try {
       allPositions = utrackedClient.getAllVehiclePositions();

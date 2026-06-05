@@ -17,6 +17,8 @@ public class DistanceMessage {
     public Direction direction;
     public Instant timestamp;
 
+    public DistanceMessage() {}
+
     public DistanceMessage(String vin, double distanceMeters, double changeRateMps, Direction direction, Instant timestamp) {
         this.vin = vin;
         this.distanceMeters = distanceMeters;

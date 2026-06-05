@@ -16,6 +16,8 @@ public class GpsMessage {
     public BigDecimal longitude;
     public Instant timestamp;
 
+    public GpsMessage() {}
+
     public GpsMessage(String vin, BigDecimal latitude, BigDecimal longitude, Instant timestamp) {
         this.vin = vin;
         this.latitude = latitude;

@@ -6,7 +6,6 @@ import io.smallrye.reactive.messaging.annotations.Blocking;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.transaction.Transactional;
 import java.nio.charset.StandardCharsets;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;

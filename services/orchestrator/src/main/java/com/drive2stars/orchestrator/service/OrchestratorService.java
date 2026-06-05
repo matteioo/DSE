@@ -16,7 +16,7 @@ public class OrchestratorService {
   }
 
   /**
-   * Processes a distance method coming from a SONAR service. It both processes the SONAR findings
+   * Processes a distance message coming from a SONAR service. It both processes the SONAR findings
    * and checks the integrity of the detected distances by calculating the distance via the UTRACKED
    * service in parallel.
    *
