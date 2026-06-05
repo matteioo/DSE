@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalDouble;
 import java.util.concurrent.ConcurrentHashMap;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
@@ -214,7 +215,8 @@ public class VehicleSimulationService {
     if (scenario != SimulationScenarioCommand.Scenario.SCENARIO_2) {
       return false;
     }
-    return nearestAheadDistanceMeters() > resumeDistanceMeters;
+    OptionalDouble nearestAheadDistance = nearestAheadDistanceMeters();
+    return nearestAheadDistance.isPresent() && nearestAheadDistance.getAsDouble() > resumeDistanceMeters;
   }
 
   private double desiredScenarioSpeed() {
@@ -242,12 +244,11 @@ public class VehicleSimulationService {
         + Math.max(0, linePosition - 1) * scenarioSpeedDeltaMetersPerSecond;
   }
 
-  private double nearestAheadDistanceMeters() {
+  private OptionalDouble nearestAheadDistanceMeters() {
     return snapshots().stream()
         .filter(snapshot -> snapshot.positionMeters() > positionMeters)
         .mapToDouble(snapshot -> snapshot.positionMeters() - positionMeters)
-        .min()
-        .orElse(Double.POSITIVE_INFINITY);
+        .min();
   }
 
   private double nearestBehindDistanceMeters() {
