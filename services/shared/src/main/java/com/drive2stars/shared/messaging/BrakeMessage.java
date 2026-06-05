@@ -18,12 +18,12 @@ public class BrakeMessage {
     /** 1–3 for BRAKENOW-evaluated conditions, 4 for ORCHESTRATOR plausibility check. */
     public int conditionTriggered;
     /** "BRAKENOW" or "ORCHESTRATOR" */
-    public String source;
+    public Source source;
     public Instant timestamp;
 
     public BrakeMessage() {}
 
-    public BrakeMessage(String vin, boolean active, int conditionTriggered, String source, Instant timestamp) {
+    public BrakeMessage(String vin, boolean active, int conditionTriggered, Source source, Instant timestamp) {
         this.vin = vin;
         this.active = active;
         this.conditionTriggered = conditionTriggered;
@@ -34,5 +34,10 @@ public class BrakeMessage {
     @Override
     public String toString() {
         return "BrakeMessage{vin='" + vin + "', active=" + active + ", condition=" + conditionTriggered + ", source='" + source + "', ts=" + timestamp + '}';
+    }
+
+    public enum Source {
+        ORCHESTRATOR,
+        BRAKENOW
     }
 }

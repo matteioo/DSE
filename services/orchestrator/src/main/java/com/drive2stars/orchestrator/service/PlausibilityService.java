@@ -1,0 +1,117 @@
+package com.drive2stars.orchestrator.service;
+
+import com.drive2stars.orchestrator.endpoint.UtrackedClient;
+import com.drive2stars.orchestrator.endpoint.VehiclePositionDto;
+import com.drive2stars.shared.messaging.DistanceMessage;
+import jakarta.enterprise.context.ApplicationScoped;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.jboss.logging.Logger;
+
+import java.util.List;
+import java.util.OptionalDouble;
+import java.util.concurrent.CompletableFuture;
+
+@ApplicationScoped
+public class PlausibilityService {
+
+    private static final Logger LOG = Logger.getLogger(PlausibilityService.class);
+    private static final double DEVIATION_THRESHOLD_METERS = 15.0;
+    private static final double EARTH_RADIUS_METERS = 6_371_000.0;
+
+    private final UtrackedClient utrackedClient;
+    private final BrakeConditionService brakeConditionService;
+
+    public PlausibilityService(@RestClient UtrackedClient utrackedClient,
+                               BrakeConditionService brakeConditionService) {
+        this.utrackedClient = utrackedClient;
+        this.brakeConditionService = brakeConditionService;
+    }
+
+    public CompletableFuture<Void> validateDistance(DistanceMessage msg) {
+        return CompletableFuture.runAsync(() -> check(msg));
+    }
+
+    private void check(DistanceMessage msg) {
+        // Start both REST calls in parallel — they are independent
+        CompletableFuture<List<VehiclePositionDto>> historyFuture =
+                CompletableFuture.supplyAsync(() -> utrackedClient.getHistory(msg.vin, 2));
+        CompletableFuture<List<VehiclePositionDto>> allPositionsFuture =
+                CompletableFuture.supplyAsync(utrackedClient::getAllVehiclePositions);
+
+        List<VehiclePositionDto> history;
+        try {
+            history = historyFuture.join();
+        } catch (Exception e) {
+            LOG.warnf("Plausibility check skipped for %s — history unavailable: %s",
+                    msg.vin, e.getMessage());
+            return;
+        }
+
+        // Cannot derive driving direction from only one GPS entry, so skip plausibility check in that case
+        if (history.size() < 2) {
+            LOG.infof("Plausibility check skipped for %s — only %d GPS entries",
+                    msg.vin, history.size());
+            return;
+        }
+
+        List<VehiclePositionDto> allPositions;
+        try {
+            allPositions = allPositionsFuture.join();
+        } catch (Exception e) {
+            LOG.warnf("Plausibility check skipped for %s — UTRACKED unavailable: %s", msg.vin,
+                    e.getMessage());
+            return;
+        }
+
+        if (allPositions.size() < 2) {
+            LOG.infof("Plausibility check skipped for %s — fewer than 2 vehicles known", msg.vin);
+            return;
+        }
+
+        VehiclePositionDto self = allPositions.stream()
+                .filter(p -> msg.vin.equals(p.vin))
+                .findFirst()
+                .orElse(null);
+
+        if (self == null) {
+            LOG.infof("Plausibility check skipped for %s — no GPS position in UTRACKED yet", msg.vin);
+            return;
+        }
+
+        OptionalDouble bestDeviation = allPositions.stream()
+                .filter(p -> !msg.vin.equals(p.vin))
+                .mapToDouble(other -> {
+                    double gpsDistance = haversine(
+                            self.latitude.doubleValue(), self.longitude.doubleValue(),
+                            other.latitude.doubleValue(), other.longitude.doubleValue());
+                    return Math.abs(gpsDistance - msg.distanceMeters);
+                })
+                .min();
+
+        if (bestDeviation.isEmpty()) {
+            LOG.infof("Plausibility check skipped for %s — no other vehicles in UTRACKED", msg.vin);
+            return;
+        }
+
+        LOG.debugf("Plausibility check for %s: deviation=%.2fm (threshold=%.1fm)", msg.vin,
+                bestDeviation.getAsDouble(), DEVIATION_THRESHOLD_METERS);
+
+        if (bestDeviation.getAsDouble() > DEVIATION_THRESHOLD_METERS) {
+            LOG.warnf("Condition 4 triggered for %s — GPS/SONAR deviation %.2fm exceeds %.1fm threshold",
+                    msg.vin, bestDeviation.getAsDouble(), DEVIATION_THRESHOLD_METERS);
+            brakeConditionService.triggerBrake(msg, 4);
+        }
+    }
+
+    /**
+     * Haversine formula — returns distance in meters between two GPS coordinates.
+     */
+    private double haversine(double lat1, double lon1, double lat2, double lon2) {
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        return EARTH_RADIUS_METERS * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+}
