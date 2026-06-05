@@ -33,7 +33,7 @@ public class BrakeMessage {
 
     @Override
     public String toString() {
-        return "BrakeMessage{vin='" + vin + "', active=" + active + ", condition=" + conditionTriggered + ", source='" + source.toString() + "', ts=" + timestamp + '}';
+        return "BrakeMessage{vin='" + vin + "', active=" + active + ", condition=" + conditionTriggered + ", source='" + source + "', ts=" + timestamp + '}';
     }
 
     public enum Source {
