@@ -12,12 +12,10 @@ public class VehiclePositionDto {
     public BigDecimal longitude;
 
     @Override
-    @Override
     public String toString() {
         return "VehiclePositionDto{" + "vin='" + vin + '\'' +
                 ", latitude=" + latitude +
                 ", longitude=" + longitude +
                 '}';
-    }
     }
 }
