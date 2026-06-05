@@ -8,7 +8,6 @@ import java.time.Instant;
 public class SonarReadingDto {
 
   public String vin;
-  public String targetVin;
   public String direction;
   public BigDecimal distanceMeters;
   public BigDecimal distanceChangeMetersPerSecond;
@@ -16,10 +15,9 @@ public class SonarReadingDto {
 
   public SonarReadingDto() {}
 
-  public SonarReadingDto(String vin, String targetVin, String direction,
+  public SonarReadingDto(String vin, String direction,
       BigDecimal distanceMeters, BigDecimal distanceChangeMetersPerSecond, Instant measuredAt) {
     this.vin = vin;
-    this.targetVin = targetVin;
     this.direction = direction;
     this.distanceMeters = distanceMeters;
     this.distanceChangeMetersPerSecond = distanceChangeMetersPerSecond;
