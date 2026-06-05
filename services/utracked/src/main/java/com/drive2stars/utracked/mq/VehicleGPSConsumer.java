@@ -1,6 +1,6 @@
 package com.drive2stars.utracked.mq;
 
-import com.drive2stars.utracked.endpoint.VehicleGPSDto;
+import com.drive2stars.shared.messaging.GpsMessage;
 import com.drive2stars.utracked.persistence.VehiclePositionEntity;
 import io.smallrye.reactive.messaging.annotations.Blocking;
 import io.vertx.core.json.DecodeException;
@@ -20,9 +20,9 @@ public class VehicleGPSConsumer {
   @Blocking
   @Transactional
   public void process(byte[] raw) {
-    VehicleGPSDto msg;
+    GpsMessage msg;
     try {
-      msg = new JsonObject(new String(raw, StandardCharsets.UTF_8)).mapTo(VehicleGPSDto.class);
+      msg = new JsonObject(new String(raw, StandardCharsets.UTF_8)).mapTo(GpsMessage.class);
     } catch (DecodeException e) {
       LOG.errorf("Dropping malformed GPS message: %s", e.getMessage());
       return;
@@ -31,7 +31,7 @@ public class VehicleGPSConsumer {
       LOG.errorf("Dropping incomplete GPS message: %s", msg);
       return;
     }
-    LOG.infof("Received GPS for VIN %s: %s, %s", msg.vin, msg.latitude, msg.longitude);
+    LOG.infof("Received GPS for VIN %s: lat=%s, lon=%s", msg.vin, msg.latitude, msg.longitude);
 
     VehiclePositionEntity entity = new VehiclePositionEntity();
     entity.vin = msg.vin;

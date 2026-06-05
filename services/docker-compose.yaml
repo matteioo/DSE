@@ -30,8 +30,10 @@ services:
 
   brakenow:
     build:
-      context: brakenow
+      context: .
       dockerfile: Dockerfile
+      args:
+        SERVICE: brakenow
     ports:
       - "8081:8080"
     environment:
@@ -44,8 +46,10 @@ services:
 
   orchestrator:
     build:
-      context: orchestrator
+      context: .
       dockerfile: Dockerfile
+      args:
+        SERVICE: orchestrator
     ports:
       - "8082:8080"
     environment:
@@ -54,17 +58,22 @@ services:
       QUARKUS_DATASOURCE_PASSWORD: dse
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
+      UTRACKED_URL: http://utracked:8080
     depends_on:
       postgres:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      utracked:
+        condition: service_started
     profiles: [app]
 
   simulator:
     build:
-      context: simulator
+      context: .
       dockerfile: Dockerfile
+      args:
+        SERVICE: simulator
     ports:
       - "8083:8080"
     environment:
@@ -77,8 +86,10 @@ services:
 
   sonar:
     build:
-      context: sonar
+      context: .
       dockerfile: Dockerfile
+      args:
+        SERVICE: sonar
     ports:
       - "8084:8080"
     environment:
@@ -91,16 +102,22 @@ services:
 
   spider:
     build:
-      context: spider
+      context: .
       dockerfile: Dockerfile
+      args:
+        SERVICE: spider
     ports:
       - "8085:8080"
+    environment:
+      UTRACKED_URL: http://utracked:8080
     profiles: [app]
 
   utracked:
     build:
-      context: utracked
+      context: .
       dockerfile: Dockerfile
+      args:
+        SERVICE: utracked
     ports:
       - "8086:8080"
     environment:
@@ -118,16 +135,23 @@ services:
 
   whereami:
     build:
-      context: whereami
+      context: .
       dockerfile: Dockerfile
+      args:
+        SERVICE: whereami
     ports:
       - "8087:8080"
     environment:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
+      SIMULATOR_BASE_URL: http://simulator:8080
+      WHEREAMI_VIN: D2S-DEMO-VIN-002
+      WHEREAMI_POLL_INTERVAL: 10s
     depends_on:
       rabbitmq:
         condition: service_healthy
+      simulator:
+        condition: service_started
     profiles: [app]
 
   storefront:
@@ -136,4 +160,6 @@ services:
       dockerfile: Dockerfile
     ports:
       - "3000:80"
+    depends_on:
+      - spider
     profiles: [app]
