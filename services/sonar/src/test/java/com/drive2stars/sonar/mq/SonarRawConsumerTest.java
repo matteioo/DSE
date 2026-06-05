@@ -53,7 +53,7 @@ class SonarRawConsumerTest {
   }
 
   private static SonarSensorReadingDto reading() {
-    return new SonarSensorReadingDto("VIN-2", "VIN-1", "FRONT", new BigDecimal("50.30"),
+    return new SonarSensorReadingDto("VIN-2", "FRONT", new BigDecimal("50.30"),
         new BigDecimal("49.90"), new BigDecimal("50.05"), Instant.parse("2026-06-05T10:00:00Z"));
   }
 

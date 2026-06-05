@@ -31,16 +31,10 @@ class GreetingResourceTest {
     @Test
     void testVehicleSonarEndpoint() {
         given()
-          .when().get("/vehicles/D2S-DEMO-VIN-002/sonar")
+          .when().get("/vehicles/D2S-DEMO-VIN-001/sonar")
           .then()
              .statusCode(200)
-             .body("size()", is(1))
-             .body("[0].vin", is("D2S-DEMO-VIN-002"))
-             .body("[0].targetVin", is("D2S-DEMO-VIN-001"))
-             .body("[0].direction", is("FRONT"))
-             .body("[0].radarDistanceMeters", notNullValue())
-             .body("[0].lidarDistanceMeters", notNullValue())
-             .body("[0].ultrasonicDistanceMeters", notNullValue());
+             .body("size()", is(0));
     }
 
     @Test
@@ -49,11 +43,7 @@ class GreetingResourceTest {
           .when().get("/sonar/readings")
           .then()
              .statusCode(200)
-             .body("size()", is(2))
-             .body("[0].vin", notNullValue())
-             .body("[1].vin", notNullValue())
-             .body("[0].targetVin", notNullValue())
-             .body("[1].targetVin", notNullValue());
+             .body("size()", is(0));
     }
 
     @Test

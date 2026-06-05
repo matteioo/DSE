@@ -11,6 +11,11 @@ import java.time.Instant;
 public class EventService {
 
     @Transactional
+    public long clearEvents() {
+        return EventEntity.deleteAll();
+    }
+
+    @Transactional
     public void recordBrake(String vin, int conditionTriggered) {
         persist(vin, Instant.now(), EventEntity.BrakeEventType.EMERGENCY_BRAKE_SENT,
                 conditionTriggered);
