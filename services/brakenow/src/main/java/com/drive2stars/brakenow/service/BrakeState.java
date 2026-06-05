@@ -12,8 +12,7 @@ public class BrakeState {
     public final int     conditionTriggered;
     public final Instant updatedAt;
 
-    public BrakeState(String vin, boolean emergencyBrakeActive, boolean preEmergencyBrake,
-                      int conditionTriggered, Instant updatedAt) {
+    public BrakeState(String vin, boolean emergencyBrakeActive, boolean preEmergencyBrake, int conditionTriggered, Instant updatedAt) {
         this.vin                  = vin;
         this.emergencyBrakeActive = emergencyBrakeActive;
         this.preEmergencyBrake    = preEmergencyBrake;
