@@ -2,7 +2,6 @@ package com.drive2stars.brakenow.service;
 
 import com.drive2stars.brakenow.mq.BrakePublisher;
 import com.drive2stars.shared.messaging.BrakeMessage;
-import com.drive2stars.shared.messaging.DistanceMessage;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.time.Instant;
@@ -37,7 +36,7 @@ public class BrakeService {
     static final double COND3_RATE_MS =  0.0;
 
 
-  @ConfigProperty(name = "brakenow.vin")
+    @ConfigProperty(name = "brakenow.vin")
     String ownVin;
 
     @Inject
@@ -45,18 +44,16 @@ public class BrakeService {
 
     private final ConcurrentHashMap<String, BrakeState> states = new ConcurrentHashMap<>();
 
-    public void processDistance(DistanceMessage msg) {
-        if (!ownVin.equals(msg.vin)) return;
-
-        double dist = msg.distanceMeters;
-        // changeRateMps negative = approaching, convert to positive closing rate
-        double closingRate = -msg.changeRateMps;
-
-        boolean preEmergency  = dist < PRE_EMERGENCY_THRESHOLD_M;
-        int     condition     = evaluateCondition(dist, closingRate);
+    /**
+     * @param vin the vehicle this reading belongs to
+     * @param distanceM  distance to the vehicle ahead in metres
+     * @param closingMps closing rate in m/s, positive = approaching
+     */
+    public void processDistance(String vin, double distanceM, double closingMps) {
+        boolean preEmergency = distanceM < PRE_EMERGENCY_THRESHOLD_M;
+        int condition = evaluateCondition(distanceM, closingMps);
         boolean emergencyBrake = condition > 0;
-
-        updateAndPublish(msg.vin, dist, emergencyBrake, preEmergency, condition);
+        updateAndPublish(vin, distanceM, emergencyBrake, preEmergency, condition);
     }
 
     public BrakeState getState(String vin) {
@@ -98,6 +95,6 @@ public class BrakeService {
         }
 
         brakePublisher.publish(
-            new BrakeMessage(vin, emergencyBrake, condition, "BRAKENOW", Instant.now()));
+            new BrakeMessage(vin, emergencyBrake, condition, BrakeMessage.Source.BRAKENOW, Instant.now()));
     }
 }
