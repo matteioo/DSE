@@ -151,8 +151,8 @@ class VehicleSimulationServiceTest {
     List<SonarSensorReadingDto> readings = second.getOwnSonarReadings();
 
     assertEquals(2, readings.size());
-    assertTrue(readings.stream().anyMatch(r -> "FRONT".equals(r.direction) && "VIN-1".equals(r.targetVin)));
-    assertTrue(readings.stream().anyMatch(r -> "BACK".equals(r.direction) && "VIN-3".equals(r.targetVin)));
+    assertTrue(readings.stream().anyMatch(r -> "FRONT".equals(r.direction)));
+    assertTrue(readings.stream().anyMatch(r -> "BACK".equals(r.direction)));
   }
 
   @Test
@@ -167,7 +167,7 @@ class VehicleSimulationServiceTest {
     List<SonarSensorReadingDto> readings = follower.getOwnSonarReadings();
 
     assertEquals(1, readings.size());
-    assertEquals("VIN-1", readings.getFirst().targetVin);
+    assertEquals("FRONT", readings.getFirst().direction);
     assertEquals(new BigDecimal("80.30"), readings.getFirst().radarDistanceMeters);
   }
 

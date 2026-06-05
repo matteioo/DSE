@@ -16,7 +16,6 @@ class SonarPublisherTest {
     Instant measuredAt = Instant.parse("2026-06-05T12:00:00Z");
     SonarReadingDto reading = new SonarReadingDto(
         "VIN-1",
-        "VIN-2",
         "front",
         new BigDecimal("12.34"),
         new BigDecimal("5.67"),
@@ -35,7 +34,6 @@ class SonarPublisherTest {
   void rejectsUnsupportedDirection() {
     SonarReadingDto reading = new SonarReadingDto(
         "VIN-1",
-        "VIN-2",
         "LEFT",
         new BigDecimal("12.34"),
         new BigDecimal("5.67"),

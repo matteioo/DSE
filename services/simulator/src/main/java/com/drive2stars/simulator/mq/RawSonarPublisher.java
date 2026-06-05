@@ -25,7 +25,6 @@ public class RawSonarPublisher {
         .addMetadata(OutgoingRabbitMQMetadata.builder()
             .withContentType("application/json")
             .build()));
-    LOG.infof("Published raw SONAR for VIN %s to %s/%s", reading.vin, reading.direction,
-        reading.targetVin);
+    LOG.infof("Published raw SONAR for VIN %s to %s", reading.vin, reading.direction);
   }
 }
