@@ -28,22 +28,6 @@ services:
     volumes:
       - ./docker/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql
 
-  brakenow:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        SERVICE: brakenow
-    ports:
-      - "8081:8080"
-    environment:
-      RABBITMQ_HOST: rabbitmq
-      RABBITMQ_PORT: 5672
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-    profiles: [app]
-
   orchestrator:
     build:
       context: .
@@ -136,6 +120,41 @@ services:
       rabbitmq:
         condition: service_healthy
     profiles: [app]
+
+
+  brakenow-vehicle-1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE: brakenow
+    ports:
+      - "8091:8080"
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      BRAKENOW_VIN: D2S-DEMO-VIN-001
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    profiles: [app]
+
+  brakenow-vehicle-2:
+      build:
+        context: .
+        dockerfile: Dockerfile
+        args:
+          SERVICE: brakenow
+      ports:
+        - "8092:8080"
+      environment:
+        RABBITMQ_HOST: rabbitmq
+        RABBITMQ_PORT: 5672
+        BRAKENOW_VIN: D2S-DEMO-VIN-002
+      depends_on:
+        rabbitmq:
+          condition: service_healthy
+      profiles: [ app ]
 
   whereami-vehicle-1:
     build:
