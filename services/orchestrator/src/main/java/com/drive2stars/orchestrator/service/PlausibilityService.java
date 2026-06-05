@@ -5,6 +5,7 @@ import com.drive2stars.orchestrator.endpoint.VehiclePositionDto;
 import com.drive2stars.shared.messaging.DistanceMessage;
 import jakarta.enterprise.context.ApplicationScoped;
 import java.util.List;
+import java.util.OptionalDouble;
 import java.util.concurrent.CompletableFuture;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
@@ -30,10 +31,15 @@ public class PlausibilityService {
   }
 
   private void check(DistanceMessage msg) {
-    // Stores last two positions for vehicle to derive driving direction
+    // Start both REST calls in parallel — they are independent
+    CompletableFuture<List<VehiclePositionDto>> historyFuture =
+        CompletableFuture.supplyAsync(() -> utrackedClient.getHistory(msg.vin, 2));
+    CompletableFuture<List<VehiclePositionDto>> allPositionsFuture =
+        CompletableFuture.supplyAsync(() -> utrackedClient.getAllVehiclePositions());
+
     List<VehiclePositionDto> history;
     try {
-      history = utrackedClient.getHistory(msg.vin, 2);
+      history = historyFuture.join();
     } catch (Exception e) {
       LOG.warnf("Plausibility check skipped for %s — history unavailable: %s",
           msg.vin, e.getMessage());
@@ -49,7 +55,7 @@ public class PlausibilityService {
 
     List<VehiclePositionDto> allPositions;
     try {
-      allPositions = utrackedClient.getAllVehiclePositions();
+      allPositions = allPositionsFuture.join();
     } catch (Exception e) {
       LOG.warnf("Plausibility check skipped for %s — UTRACKED unavailable: %s", msg.vin, e.getMessage());
       return;
@@ -70,7 +76,7 @@ public class PlausibilityService {
       return;
     }
 
-    double bestDeviation = allPositions.stream()
+    OptionalDouble bestDeviation = allPositions.stream()
         .filter(p -> !msg.vin.equals(p.vin))
         .mapToDouble(other -> {
           double gpsDistance = haversine(
@@ -78,19 +84,18 @@ public class PlausibilityService {
               other.latitude.doubleValue(), other.longitude.doubleValue());
           return Math.abs(gpsDistance - msg.distanceMeters);
         })
-        .min()
-        .orElse(Double.MAX_VALUE);
+        .min();
 
-    if (bestDeviation == Double.MAX_VALUE) {
+    if (bestDeviation.isEmpty()) {
       LOG.infof("Plausibility check skipped for %s — no other vehicles in UTRACKED", msg.vin);
       return;
     }
 
-    LOG.debugf("Plausibility check for %s: deviation=%.2fm (threshold=%.1fm)", msg.vin, bestDeviation, DEVIATION_THRESHOLD_METERS);
+    LOG.debugf("Plausibility check for %s: deviation=%.2fm (threshold=%.1fm)", msg.vin, bestDeviation.getAsDouble(), DEVIATION_THRESHOLD_METERS);
 
-    if (bestDeviation > DEVIATION_THRESHOLD_METERS) {
+    if (bestDeviation.getAsDouble() > DEVIATION_THRESHOLD_METERS) {
       LOG.warnf("Condition 4 triggered for %s — GPS/SONAR deviation %.2fm exceeds %.1fm threshold",
-          msg.vin, bestDeviation, DEVIATION_THRESHOLD_METERS);
+          msg.vin, bestDeviation.getAsDouble(), DEVIATION_THRESHOLD_METERS);
       brakeConditionService.triggerBrake(msg, 4);
     }
   }

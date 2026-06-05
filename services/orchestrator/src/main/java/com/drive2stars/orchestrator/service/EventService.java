@@ -11,23 +11,23 @@ public class EventService {
 
   @Transactional
   public void recordBrake(String vin, int conditionTriggered) {
-    EventEntity event = new EventEntity();
-    event.vin = vin;
-    event.timestamp = Instant.now();
-    event.eventType = EventEntity.BrakeEventType.EMERGENCY_BRAKE_SENT;
-    event.triggerCondition = conditionTriggered;
-    event.persist();
+    persist(vin, Instant.now(), EventEntity.BrakeEventType.EMERGENCY_BRAKE_SENT, conditionTriggered);
   }
 
   @Transactional
   public void recordBrake(BrakeMessage msg) {
-    EventEntity event = new EventEntity();
-    event.vin = msg.vin;
-    event.timestamp = msg.timestamp;
-    event.eventType = msg.active
+    EventEntity.BrakeEventType type = msg.active
         ? EventEntity.BrakeEventType.LOCAL_BRAKE_REPORTED
         : EventEntity.BrakeEventType.PRE_EMERGENCY_REPORTED;
-    event.triggerCondition = msg.conditionTriggered;
+    persist(msg.vin, msg.timestamp, type, msg.conditionTriggered);
+  }
+
+  private void persist(String vin, Instant timestamp, EventEntity.BrakeEventType eventType, int triggerCondition) {
+    EventEntity event = new EventEntity();
+    event.vin = vin;
+    event.timestamp = timestamp;
+    event.eventType = eventType;
+    event.triggerCondition = triggerCondition;
     event.persist();
   }
 }
