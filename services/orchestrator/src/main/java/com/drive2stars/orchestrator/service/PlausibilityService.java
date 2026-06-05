@@ -4,6 +4,8 @@ import com.drive2stars.orchestrator.endpoint.UtrackedClient;
 import com.drive2stars.orchestrator.endpoint.VehiclePositionDto;
 import com.drive2stars.shared.messaging.DistanceMessage;
 import jakarta.enterprise.context.ApplicationScoped;
+import java.time.Duration;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
@@ -20,11 +22,17 @@ public class PlausibilityService {
 
     private final UtrackedClient utrackedClient;
     private final BrakeConditionService brakeConditionService;
+    private final SimulationResetStateService simulationResetStateService;
+    private final Duration resetGracePeriod;
 
     public PlausibilityService(@RestClient UtrackedClient utrackedClient,
-                               BrakeConditionService brakeConditionService) {
+                               BrakeConditionService brakeConditionService,
+                               SimulationResetStateService simulationResetStateService,
+                               @ConfigProperty(name = "orchestrator.reset.grace.seconds") long resetGraceSeconds) {
         this.utrackedClient = utrackedClient;
         this.brakeConditionService = brakeConditionService;
+        this.simulationResetStateService = simulationResetStateService;
+        this.resetGracePeriod = Duration.ofSeconds(resetGraceSeconds);
     }
 
     public CompletableFuture<Void> validateDistance(DistanceMessage msg) {
@@ -32,6 +40,11 @@ public class PlausibilityService {
     }
 
     private void check(DistanceMessage msg) {
+        if (simulationResetStateService.isWithinResetGrace(resetGracePeriod)) {
+            LOG.infof("Plausibility check skipped for %s — simulation reset grace active", msg.vin);
+            return;
+        }
+
         // Start both REST calls in parallel — they are independent
         CompletableFuture<List<VehiclePositionDto>> historyFuture =
                 CompletableFuture.supplyAsync(() -> utrackedClient.getHistory(msg.vin, 2));
