@@ -12,13 +12,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
 
-/**
- * Consumes DistanceMessages published by SONAR on exchange vehicle.sonar.
- * SONAR converts SonarReadingDto → DistanceMessage before publishing.
- *
- * Only processes messages for own VIN with direction FRONT.
- * changeRateMps: positive = approaching (DistanceMessage spec).
- */
+
 @ApplicationScoped
 public class SonarConsumer {
 
