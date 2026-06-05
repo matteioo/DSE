@@ -1,5 +1,5 @@
 info:
-  name: getPOsitionHistoryByVIN
+  name: getPositionHistoryByVIN
   type: http
   seq: 3
 

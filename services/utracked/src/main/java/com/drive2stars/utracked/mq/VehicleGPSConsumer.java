@@ -31,7 +31,7 @@ public class VehicleGPSConsumer {
       LOG.errorf("Dropping incomplete GPS message: %s", msg);
       return;
     }
-    LOG.infof("Received GPS for VIN %s: %s, %s", msg.vin, msg.latitude, msg.longitude);
+    LOG.infof("Received GPS for VIN %s: lat=%s, lon=%s", msg.vin, msg.latitude, msg.longitude);
 
     VehiclePositionEntity entity = new VehiclePositionEntity();
     entity.vin = msg.vin;
