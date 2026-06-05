@@ -136,10 +136,10 @@ public class SonarPollingService {
       }
       Instant measuredAt = sensorReading.measuredAt == null ? Instant.now() : sensorReading.measuredAt;
       String key = key(sensorReading.vin, sensorReading.targetVin, sensorReading.direction);
-      PreviousReading previousReading = previousReadings.get(key);
-      BigDecimal distanceChangeMetersPerSecond = calculateDistanceChange(distanceMeters, measuredAt,
-          previousReading);
-      previousReadings.put(key, new PreviousReading(distanceMeters, measuredAt));
+      PreviousReading previousReading = previousReadings.put(key,
+          new PreviousReading(distanceMeters, measuredAt));
+      BigDecimal distanceChangeMetersPerSecond =
+          calculateDistanceChange(distanceMeters, measuredAt, previousReading);
       fusedReadings.add(new SonarReadingDto(
           sensorReading.vin,
           sensorReading.targetVin,
