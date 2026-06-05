@@ -140,6 +140,20 @@ class VehicleSimulationServiceTest {
   }
 
   @Test
+  void scenario2KeepsBrakeActiveWhenFrontVehicleStateExpires() {
+    MutableClock clock = clock();
+    VehicleSimulationService follower = simulator("VIN-2", 2, clock);
+    follower.applyScenarioCommand(command(SimulationScenarioCommand.Scenario.SCENARIO_2));
+    follower.applyBrakeMessage(brake("VIN-2", true));
+    follower.updatePeerState(state("VIN-1", 1, 100.0, 20.0,
+        SimulationScenarioCommand.Scenario.SCENARIO_2));
+
+    clock.advance(Duration.ofSeconds(4));
+
+    assertEquals(0.0, follower.currentStateMessage().speedMetersPerSecond);
+  }
+
+  @Test
   void sonarReportsNearestVehicleAheadAndBehind() {
     MutableClock clock = clock();
     VehicleSimulationService second = simulator("VIN-2", 2, clock);
