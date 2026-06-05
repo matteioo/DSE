@@ -1,12 +1,16 @@
 package com.drive2stars.brakenow.service;
 
 import com.drive2stars.brakenow.mq.BrakePublisher;
+import com.drive2stars.brakenow.mq.SimulatorPublisher;
 import com.drive2stars.shared.messaging.BrakeMessage;
+import com.drive2stars.shared.messaging.SimulatorBrakeMessage;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.time.Instant;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
+
+import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
@@ -39,16 +43,18 @@ public class BrakeService {
     @ConfigProperty(name = "brakenow.vin")
     String ownVin;
 
-
     private final BrakePublisher brakePublisher;
 
     private final ConcurrentHashMap<String, BrakeState> states = new ConcurrentHashMap<>();
 
-    public BrakeService(BrakePublisher brakePublisher) {
-      this.brakePublisher = brakePublisher;
-    }
+    @Inject
+    SimulatorPublisher simulatorPublisher;
 
-  /**
+    public BrakeService(BrakePublisher brakePublisher) {
+       this.brakePublisher = brakePublisher;
+     }
+
+    /**
      * @param vin the vehicle this reading belongs to
      * @param distanceM  distance to the vehicle ahead in metres
      * @param closingMps closing rate in m/s, positive = approaching
@@ -59,6 +65,7 @@ public class BrakeService {
         boolean emergencyBrake = condition > 0;
         updateAndPublish(vin, distanceM, emergencyBrake, preEmergency, condition);
     }
+
 
     public BrakeState getState(String vin) {
         return states.get(vin);
@@ -98,7 +105,16 @@ public class BrakeService {
             LOG.infof("Normal vin=%s dist=%.1fm", vin, dist);
         }
 
+
         brakePublisher.publish(
-            new BrakeMessage(vin, emergencyBrake, condition, BrakeMessage.Source.BRAKENOW, Instant.now()));
+              new BrakeMessage(vin, emergencyBrake, condition, BrakeMessage.Source.BRAKENOW, Instant.now()));
+        SimulatorBrakeMessage simulatorBrakeMessage = new SimulatorBrakeMessage(vin,emergencyBrake, preEmergency, Instant.now());
+        simulatorPublisher.publish(simulatorBrakeMessage);
+    }
+
+    public void processBrake(String vin, boolean active, Instant timestamp) {
+      SimulatorBrakeMessage simulatorBrakeMessage = new SimulatorBrakeMessage(vin,active, false, timestamp);
+
+      simulatorPublisher.publish(simulatorBrakeMessage);
     }
 }
