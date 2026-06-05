@@ -149,7 +149,7 @@ services:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       SIMULATOR_BASE_URL: http://simulator:8080
-      WHEREAMI_VIN: D2S-DEMO-VIN-002
+      WHEREAMI_VIN: D2S-DEMO-VIN-001
       WHEREAMI_POLL_INTERVAL: 10s
     depends_on:
       rabbitmq:
@@ -170,7 +170,7 @@ services:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       SIMULATOR_BASE_URL: http://simulator:8080
-      WHEREAMI_VIN: D2S-DEMO-VIN-001
+      WHEREAMI_VIN: D2S-DEMO-VIN-002
       WHEREAMI_POLL_INTERVAL: 10s
     depends_on:
       rabbitmq:
@@ -193,7 +193,6 @@ services:
       SIMULATOR_BASE_URL: http://simulator:8080
       SONAR_MODE: vehicle
       SONAR_VIN: D2S-DEMO-VIN-001
-      SONAR_RAW_CONSUMER_ENABLED: "false"
       SONAR_POLL_INTERVAL: 10s
     depends_on:
       rabbitmq:
@@ -216,7 +215,6 @@ services:
       SIMULATOR_BASE_URL: http://simulator:8080
       SONAR_MODE: vehicle
       SONAR_VIN: D2S-DEMO-VIN-002
-      SONAR_RAW_CONSUMER_ENABLED: "false"
       SONAR_POLL_INTERVAL: 10s
     depends_on:
       rabbitmq:

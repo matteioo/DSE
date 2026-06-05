@@ -65,7 +65,7 @@ public class SonarPollingService {
         .toList();
   }
 
-  public List<SonarReadingDto> readFreshVehicleReadings(String requestedVin) {
+  private List<SonarReadingDto> readFreshVehicleReadings(String requestedVin) {
     try {
       List<SonarSensorReadingDto> sensorReadings = simulatorSonarClient.getVehicleReadings(requestedVin);
       return fuseAndCache(sensorReadings);
@@ -90,24 +90,6 @@ public class SonarPollingService {
     }
     for (SonarReadingDto reading : fuseAndCache(List.of(sensorReading))) {
       sonarPublisher.publish(reading);
-    }
-  }
-
-  public static void fetchAndPublish(SimulatorSonarClient simulatorSonarClient,
-      SonarPublisher sonarPublisher, Map<String, PreviousReading> previousReadings, String mode,
-      String vin) {
-    try {
-      if (!"vehicle".equalsIgnoreCase(mode)) {
-        return;
-      }
-      List<SonarSensorReadingDto> sensorReadings = simulatorSonarClient.getVehicleReadings(vin);
-      for (SonarReadingDto reading : fuseReadings(sensorReadings, previousReadings)) {
-        sonarPublisher.publish(reading);
-      }
-    } catch (WebApplicationException e) {
-      LOG.errorf("Could not read SONAR data from simulator: HTTP %d", e.getResponse().getStatus());
-    } catch (RuntimeException e) {
-      LOG.errorf(e, "Could not read SONAR data from simulator");
     }
   }
 
