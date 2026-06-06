@@ -1,10 +1,14 @@
 package com.drive2stars.orchestrator.grpc;
 
 import com.drive2stars.grpc.orchestrator.BrakeEvent;
+import com.drive2stars.grpc.orchestrator.GetBrakeStatesRequest;
+import com.drive2stars.grpc.orchestrator.GetBrakeStatesResponse;
 import com.drive2stars.grpc.orchestrator.GetEventsRequest;
 import com.drive2stars.grpc.orchestrator.GetEventsResponse;
 import com.drive2stars.grpc.orchestrator.OrchestratorServiceGrpc;
+import com.drive2stars.grpc.orchestrator.VehicleBrakeState;
 import com.drive2stars.orchestrator.persistence.EventEntity;
+import com.drive2stars.orchestrator.service.BrakeStateService;
 import com.drive2stars.orchestrator.service.EventService;
 import io.grpc.stub.StreamObserver;
 import io.quarkus.grpc.GrpcService;
@@ -16,9 +20,11 @@ import java.util.List;
 public class OrchestratorGrpcService extends OrchestratorServiceGrpc.OrchestratorServiceImplBase {
 
     EventService eventService;
+    BrakeStateService brakeStateService;
 
-    public OrchestratorGrpcService(EventService eventService) {
+    public OrchestratorGrpcService(EventService eventService, BrakeStateService brakeStateService) {
         this.eventService = eventService;
+        this.brakeStateService = brakeStateService;
     }
 
     @Override
@@ -37,6 +43,21 @@ public class OrchestratorGrpcService extends OrchestratorServiceGrpc.Orchestrato
             .toList();
 
         responseObserver.onNext(GetEventsResponse.newBuilder().addAllEvents(events).build());
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    @Blocking
+    public void getBrakeStates(GetBrakeStatesRequest request, StreamObserver<GetBrakeStatesResponse> responseObserver) {
+        List<VehicleBrakeState> states = brakeStateService.getAllStates().stream()
+                .map(s -> VehicleBrakeState.newBuilder()
+                        .setVin(s.vin)
+                        .setEmergencyBrakeActive(s.emergencyBrakeActive)
+                        .setPreEmergencyBrakeActive(s.preEmergencyBrakeActive)
+                        .build())
+                .toList();
+
+        responseObserver.onNext(GetBrakeStatesResponse.newBuilder().addAllStates(states).build());
         responseObserver.onCompleted();
     }
 }
