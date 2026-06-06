@@ -95,16 +95,22 @@ public class BrakeService {
         BrakeState prev = states.get(vin);
         Instant now = Instant.now();
 
-        // hold until vehicles are safely separated
+        // Current reading no longer meets a condition but emergency brake stays active until safe distance
         if (prev != null && prev.emergencyBrakeActive && !emergencyBrake && dist < resumeDistanceM) {
+            brakePublisher.publish(new BrakeMessage(vin, true, prev.preEmergencyBrake, prev.conditionTriggered, BrakeMessage.Source.BRAKENOW, now));
+            simulatorPublisher.publish(new SimulatorBrakeMessage(vin, true, prev.preEmergencyBrake, now));
             return;
         }
 
-        // Skip if nothing changed
+        // Skip if nothing changed, unless emergency brake is active
         if (prev != null
                 && prev.emergencyBrakeActive == emergencyBrake
                 && prev.preEmergencyBrake    == preEmergency
                 && prev.conditionTriggered   == condition) {
+            if (emergencyBrake) {
+                brakePublisher.publish(new BrakeMessage(vin, true, preEmergency, condition, BrakeMessage.Source.BRAKENOW, now));
+                simulatorPublisher.publish(new SimulatorBrakeMessage(vin, true, preEmergency, now));
+            }
             return;
         }
 
