@@ -1,7 +1,7 @@
 package com.drive2stars.simulator.service;
 
-import com.drive2stars.shared.messaging.BrakeMessage;
 import com.drive2stars.shared.messaging.SimulationScenarioCommand;
+import com.drive2stars.shared.messaging.SimulatorBrakeMessage;
 import com.drive2stars.shared.messaging.SimulatorVehicleStateMessage;
 import com.drive2stars.simulator.endpoint.SonarSensorReadingDto;
 import com.drive2stars.simulator.endpoint.VehicleGpsDto;
@@ -46,6 +46,7 @@ public class VehicleSimulationService {
   private double positionMeters;
   private double speedMetersPerSecond;
   private boolean emergencyBrakeActive;
+  private boolean preEmergencyBrakeActive;
   private boolean scenario3LeadBoosted;
   private Instant lastTick;
 
@@ -141,6 +142,7 @@ public class VehicleSimulationService {
     if (command.scenario == SimulationScenarioCommand.Scenario.IDLE) {
       scenario = SimulationScenarioCommand.Scenario.IDLE;
       emergencyBrakeActive = false;
+      preEmergencyBrakeActive = false;
       scenario3LeadBoosted = false;
       speedMetersPerSecond = 0.0;
       lastTick = now();
@@ -148,18 +150,20 @@ public class VehicleSimulationService {
     }
     scenario = command.scenario;
     emergencyBrakeActive = false;
+    preEmergencyBrakeActive = false;
     scenario3LeadBoosted = false;
     speedMetersPerSecond = desiredScenarioSpeed();
     lastTick = now();
   }
 
-  public synchronized void applyBrakeMessage(BrakeMessage message) {
+  public synchronized void applyBrakeMessage(SimulatorBrakeMessage message) {
     if (message == null || message.vin == null || !vin.equals(message.vin)) {
       return;
     }
     advance();
-    emergencyBrakeActive = message.active;
-    if (message.active) {
+    emergencyBrakeActive = message.brakeActive;
+    preEmergencyBrakeActive = message.preBreak && !message.brakeActive;
+    if (message.brakeActive) {
       speedMetersPerSecond = 0.0;
     } else {
       speedMetersPerSecond = desiredScenarioSpeed();
@@ -185,6 +189,7 @@ public class VehicleSimulationService {
     positionMeters = initialPositionMeters();
     speedMetersPerSecond = 0.0;
     emergencyBrakeActive = false;
+    preEmergencyBrakeActive = false;
     scenario3LeadBoosted = false;
     peerSnapshots.clear();
     lastTick = now();
@@ -200,10 +205,6 @@ public class VehicleSimulationService {
     double elapsedSeconds = Duration.between(lastTick, currentTime).toMillis() / 1000.0;
     if (elapsedSeconds <= 0) {
       return;
-    }
-
-    if (emergencyBrakeActive && shouldResumeAfterBrake()) {
-      emergencyBrakeActive = false;
     }
 
     speedMetersPerSecond = emergencyBrakeActive ? 0.0 : desiredScenarioSpeed();

@@ -43,6 +43,9 @@ public class BrakeService {
     @ConfigProperty(name = "brakenow.vin")
     String ownVin;
 
+    @ConfigProperty(name = "brakenow.resume.distance.meters")
+    double resumeDistanceM;
+
     private final BrakePublisher brakePublisher;
 
     private final ConcurrentHashMap<String, BrakeState> states = new ConcurrentHashMap<>();
@@ -67,6 +70,11 @@ public class BrakeService {
     }
 
 
+    public void resetState() {
+        states.clear();
+        LOG.info("Brake state cleared due to simulation reset");
+    }
+
     public BrakeState getState(String vin) {
         return states.get(vin);
     }
@@ -85,6 +93,11 @@ public class BrakeService {
     private void updateAndPublish(String vin, double dist,
                                    boolean emergencyBrake, boolean preEmergency, int condition) {
         BrakeState prev = states.get(vin);
+
+        // hold until vehicles are safely separated
+        if (prev != null && prev.emergencyBrakeActive && !emergencyBrake && dist < resumeDistanceM) {
+            return;
+        }
 
         // Skip if nothing changed
         if (prev != null
@@ -107,7 +120,7 @@ public class BrakeService {
 
 
         brakePublisher.publish(
-              new BrakeMessage(vin, emergencyBrake, condition, BrakeMessage.Source.BRAKENOW, Instant.now()));
+              new BrakeMessage(vin, emergencyBrake, preEmergency, condition, BrakeMessage.Source.BRAKENOW, Instant.now()));
         SimulatorBrakeMessage simulatorBrakeMessage = new SimulatorBrakeMessage(vin,emergencyBrake, preEmergency, Instant.now());
         simulatorPublisher.publish(simulatorBrakeMessage);
     }

@@ -25,6 +25,7 @@ public class BrakePublisher {
         emitter.send(Message.of(payload)
             .addMetadata(OutgoingRabbitMQMetadata.builder()
                 .withContentType("application/json")
+                .withRoutingKey("brake." + message.vin)
                 .build()));
         LOG.infof("Published BrakeMessage: vin=%s active=%b condition=%d source=%s",
             message.vin, message.active, message.conditionTriggered, message.source);

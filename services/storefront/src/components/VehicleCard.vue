@@ -5,11 +5,13 @@ defineProps<{ vehicle: VehicleState }>()
 
 function stateLabel(v: VehicleState): string {
   if (v.emergencyBrakeActive) return 'EMERGENCY BRAKE'
+  if (v.preEmergencyBrake) return 'PRE-EMERGENCY'
   return 'NORMAL'
 }
 
 function stateMod(v: VehicleState): string {
   if (v.emergencyBrakeActive) return 'emergency'
+  if (v.preEmergencyBrake) return 'pre-emergency'
   return 'normal'
 }
 
@@ -56,8 +58,14 @@ function fmtDist(d: number | null): string {
         </span>
       </div>
       <div class="row">
-        <span class="lbl">Emergency Brake Active</span>
-        <span class="val">{{ vehicle.emergencyBrakeActive ? 'true' : 'false' }}</span>
+        <span class="lbl">Emergency Brake</span>
+        <span class="val">{{ vehicle.emergencyBrakeActive ? 'ACTIVE' : '—' }}</span>
+      </div>
+      <div class="row">
+        <span class="lbl">Pre-Emergency Brake</span>
+        <span class="val">
+          {{ vehicle.preEmergencyBrake ? 'ACTIVE' : '—' }}
+        </span>
       </div>
     </div>
   </div>
@@ -116,6 +124,10 @@ function fmtDist(d: number | null): string {
 .state-badge[data-state='emergency'] {
   background: #7f1d1d;
   color: #fca5a5;
+}
+.state-badge[data-state='pre-emergency'] {
+  background: #78350f;
+  color: #fde68a;
 }
 
 .card-body {

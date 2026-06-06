@@ -43,6 +43,9 @@ public class BrakeConsumer {
 
     if (!ownVin.equals(msg.vin)) return;
 
+    // Only relay ORCHESTRATOR commands skip own published messages
+    if (msg.source == BrakeMessage.Source.BRAKENOW) return;
+
     LOG.infof(
             "Received emergency brake message from %s for VIN %s (%s): active=%b, conditionTriggered=%s",
             msg.source, msg.vin, msg.timestamp, msg.active, msg.conditionTriggered);

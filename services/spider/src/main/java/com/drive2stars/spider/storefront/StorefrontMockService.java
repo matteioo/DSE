@@ -1,5 +1,7 @@
 package com.drive2stars.spider.storefront;
 
+import com.drive2stars.spider.adapter.orchestrator.OrchestratorBrakeStateDto;
+import com.drive2stars.spider.adapter.orchestrator.OrchestratorClient;
 import com.drive2stars.spider.adapter.utracked.UtrackedClient;
 import com.drive2stars.spider.adapter.utracked.UtrackedPositionDto;
 import com.drive2stars.spider.storefront.dto.EventLogEntryDto;
@@ -11,6 +13,8 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Real data UTRACKED
@@ -37,6 +41,9 @@ public class StorefrontMockService {
     @Inject
     UtrackedClient utrackedClient;
 
+    @Inject
+    OrchestratorClient orchestratorClient;
+
     private volatile double  lastDistance     = -1;
     private volatile Instant lastDistanceTime = null;
 
@@ -58,10 +65,22 @@ public class StorefrontMockService {
     private List<VehicleStateDto> buildVehicleStates() {
         List<UtrackedPositionDto> positions = utrackedClient.getLatestPositions();
 
-        if (positions.size() >= 2) {
-            return buildFromUtrackedPositions(positions);
+        List<VehicleStateDto> states = (positions.size() >= 2)
+                ? buildFromUtrackedPositions(positions)
+                : buildMockVehicleStates();
+
+        Map<String, OrchestratorBrakeStateDto> brakeByVin = orchestratorClient.getBrakeStates()
+                .stream()
+                .collect(Collectors.toMap(s -> s.vin, s -> s));
+
+        for (VehicleStateDto v : states) {
+            OrchestratorBrakeStateDto brake = brakeByVin.get(v.vin);
+            if (brake != null) {
+                v.emergencyBrakeActive = brake.emergencyBrakeActive;
+                v.preEmergencyBrake = brake.preEmergencyBrakeActive;
+            }
         }
-        return buildMockVehicleStates();
+        return states;
     }
 
 
