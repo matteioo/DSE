@@ -59,6 +59,12 @@ spec:
             initialDelaySeconds: 15
             periodSeconds: 10
             timeoutSeconds: 5
+          resources:
+            requests:
+              memory: "160Mi"
+              cpu: "100m"
+            limits:
+              memory: "320Mi"
 ---
 apiVersion: v1
 kind: Service

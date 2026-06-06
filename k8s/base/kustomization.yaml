@@ -3,6 +3,7 @@ kind: Kustomization
 
 resources:
   - configmap.yaml
+  - ingress.yaml
   - infra/
   - backend/
   - ../vehicles/vehicle-1
