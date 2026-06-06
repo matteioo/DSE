@@ -54,6 +54,8 @@ spec:
               value: orchestrator.scenario
             - name: ORCHESTRATOR_RESET_GRACE_SECONDS
               value: "15"
+            - name: JAVA_TOOL_OPTIONS
+              value: "-Xms64m -Xmx200m"
           livenessProbe:
             httpGet:
               path: /q/health/live
@@ -65,9 +67,16 @@ spec:
             httpGet:
               path: /q/health/ready
               port: 8080
-            initialDelaySeconds: 15
+            initialDelaySeconds: 30
             periodSeconds: 10
             timeoutSeconds: 5
+            failureThreshold: 10
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
 ---
 apiVersion: v1
 kind: Service

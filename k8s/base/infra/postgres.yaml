@@ -67,6 +67,12 @@ spec:
               command: ["pg_isready", "-U", "dse"]
             initialDelaySeconds: 5
             periodSeconds: 5
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
       volumes:
         - name: init
           configMap:
