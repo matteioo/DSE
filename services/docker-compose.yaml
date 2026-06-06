@@ -159,6 +159,8 @@ services:
       UTRACKED_URL: http://utracked:8080
       ORCHESTRATOR_GRPC_HOST: orchestrator
       ORCHESTRATOR_GRPC_PORT: 9001
+      UTRACKED_GRPC_HOST: utracked
+      UTRACKED_GRPC_PORT: 9002
     depends_on:
       orchestrator:
         condition: service_healthy
@@ -174,6 +176,7 @@ services:
         SERVICE: utracked
     ports:
       - "8086:8080"
+      - "9002:9002"
     healthcheck:
       test: ["CMD-SHELL", "curl -fs http://localhost:8080/q/health/ready > /dev/null"]
       interval: 5s
@@ -186,6 +189,7 @@ services:
       QUARKUS_DATASOURCE_PASSWORD: dse
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
+      GRPC_PORT: 9002
       UTRACKED_SCENARIO_QUEUE_NAME: utracked.scenario
     depends_on:
       postgres:

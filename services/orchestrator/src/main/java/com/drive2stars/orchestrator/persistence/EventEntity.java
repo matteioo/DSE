@@ -29,10 +29,8 @@ public class EventEntity extends PanacheEntity {
     }
 
     public static List<EventEntity> findRecent(int limit) {
-        if (limit <= 0) {
-            return find("from EventEntity order by id desc").list();
-        }
-        return find("from EventEntity order by id desc").page(0, limit).list();
+        var query = find("from EventEntity order by id desc");
+        return limit > 0 ? query.page(0, limit).list() : query.list();
     }
 
     public enum BrakeEventType {
