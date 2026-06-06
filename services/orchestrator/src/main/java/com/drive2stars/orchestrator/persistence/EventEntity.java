@@ -4,6 +4,7 @@ import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import jakarta.persistence.*;
 
 import java.time.Instant;
+import java.util.List;
 
 @Entity
 @Table(name = "events")
@@ -23,12 +24,15 @@ public class EventEntity extends PanacheEntity {
     @Column(name = "trigger_condition")
     public Integer triggerCondition;
 
-    public static EventEntity findLatest() {
-        return find("from EventEntity order by id desc").firstResult();
+    public static long clearAll() {
+        return deleteAll();
     }
 
-    public static EventEntity findLatestByVin(String vin) {
-        return find("vin = ?1 order by id desc", vin).firstResult();
+    public static List<EventEntity> findRecent(int limit) {
+        if (limit <= 0) {
+            return find("from EventEntity order by id desc").list();
+        }
+        return find("from EventEntity order by id desc").page(0, limit).list();
     }
 
     public enum BrakeEventType {
