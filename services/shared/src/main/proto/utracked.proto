@@ -1,0 +1,30 @@
+syntax = "proto3";
+package com.drive2stars.grpc;
+option java_multiple_files = true;
+option java_package = "com.drive2stars.grpc.utracked";
+
+service UtrackedService {
+  rpc GetVehiclePosition (GetVehiclePositionRequest) returns (GetVehiclePositionResponse);
+  rpc GetVehiclePositions (GetVehiclePositionsRequest) returns (GetVehiclePositionsResponse);
+}
+
+message GetVehiclePositionRequest {
+  string vin = 1;
+}
+
+message GetVehiclePositionsRequest {
+}
+
+message GetVehiclePositionResponse {
+  VehiclePosition vehiclePosition = 1;
+}
+
+message GetVehiclePositionsResponse {
+  repeated VehiclePosition vehiclePositions = 1;
+}
+
+message VehiclePosition {
+  string vin = 1;
+  double longitude = 2;
+  double latitude = 3;
+}

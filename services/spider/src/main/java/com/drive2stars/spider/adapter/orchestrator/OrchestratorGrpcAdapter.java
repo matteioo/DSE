@@ -1,5 +1,6 @@
 package com.drive2stars.spider.adapter.orchestrator;
 
+import com.drive2stars.grpc.orchestrator.BrakeEvent;
 import com.drive2stars.grpc.orchestrator.GetEventsRequest;
 import com.drive2stars.grpc.orchestrator.GetEventsResponse;
 import com.drive2stars.grpc.orchestrator.OrchestratorServiceGrpc;
@@ -7,33 +8,42 @@ import com.drive2stars.spider.storefront.dto.EventLogEntryDto;
 import io.quarkus.grpc.GrpcClient;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.microprofile.faulttolerance.Fallback;
+import org.jboss.logging.Logger;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @ApplicationScoped
 public class OrchestratorGrpcAdapter {
+
+    private static final Logger LOG = Logger.getLogger(OrchestratorGrpcAdapter.class);
 
     @GrpcClient("orchestrator")
     OrchestratorServiceGrpc.OrchestratorServiceBlockingStub stub;
 
     @Fallback(fallbackMethod = "getRecentEventsFallback")
     public List<EventLogEntryDto> getRecentEvents(int limit) {
-        GetEventsResponse response = stub.getEvents(GetEventsRequest.newBuilder().setLimit(limit).build());
+        GetEventsResponse response = stub.withDeadlineAfter(5, TimeUnit.SECONDS)
+                .getEvents(GetEventsRequest.newBuilder().setLimit(limit).build());
 
         return response.getEventsList().stream()
-                .map(e -> {
-                    EventLogEntryDto eventLogEntryDto = new EventLogEntryDto();
-                    eventLogEntryDto.timestamp = Instant.parse(e.getTimestamp());
-                    eventLogEntryDto.source = "ORCHESTRATOR";
-                    eventLogEntryDto.level = e.getEventType().contains("EMERGENCY") ? "ERROR" : "WARN";
-                    eventLogEntryDto.message = formatMessage(e.getEventType(), e.getVin(), e.getTriggerCondition());
-                    return eventLogEntryDto;
-                }).toList();
+                .map(this::toDto)
+                .toList();
     }
 
-    List<EventLogEntryDto> getRecentEventsFallback(int limit) {
+    List<EventLogEntryDto> getRecentEventsFallback(int limit, Throwable cause) {
+        LOG.warnf("Falling back to empty event log: %s", cause.getMessage());
         return List.of();
+    }
+
+    private EventLogEntryDto toDto(BrakeEvent e) {
+        EventLogEntryDto dto = new EventLogEntryDto();
+        dto.timestamp = Instant.parse(e.getTimestamp());
+        dto.source = "ORCHESTRATOR";
+        dto.level = e.getEventType().contains("EMERGENCY") ? "ERROR" : "WARN";
+        dto.message = formatMessage(e.getEventType(), e.getVin(), e.getTriggerCondition());
+        return dto;
     }
 
     private String formatMessage(String eventType, String vin, int condition) {

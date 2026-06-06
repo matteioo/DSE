@@ -24,7 +24,6 @@ public class StorefrontResource {
 
     // TODO: replace mockService with real adapters
     //   Sonar      — distance to the vehicle in front and back, distance change rate
-    //   Utracked   — GPS data identified by VIN
     public StorefrontResource(OrchestratorGrpcAdapter orchestratorAdapter, StorefrontMockService mockService) {
         this.orchestratorAdapter = orchestratorAdapter;
         this.mockService = mockService;
@@ -32,12 +31,14 @@ public class StorefrontResource {
 
     @GET
     @Path("/vehicles")
+    @Blocking
     public List<VehicleStateDto> getVehicles() {
         return mockService.getVehicleStates();
     }
 
     @GET
     @Path("/vehicles/{vin}")
+    @Blocking
     @Operation(summary = "Single vehicle state by VIN")
     public VehicleStateDto getVehicle(@PathParam("vin") String vin) {
         VehicleStateDto dto = mockService.getVehicleState(vin);
