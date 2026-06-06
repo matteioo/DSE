@@ -4,6 +4,7 @@ import com.drive2stars.sonar.endpoint.SimulatorSonarClient;
 import com.drive2stars.sonar.endpoint.SonarReadingDto;
 import com.drive2stars.sonar.endpoint.SonarSensorReadingDto;
 import com.drive2stars.sonar.mq.SonarPublisher;
+import com.drive2stars.shared.messaging.DistanceMessage;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -14,7 +15,6 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SonarPollingServiceTest {
 
@@ -65,20 +65,23 @@ class SonarPollingServiceTest {
   }
 
   @Test
-  void backendRawMessagePublishesCalculatedReadingAndCachesLatest() {
+  void backendDistanceMessageCachesLatestWithoutPublishing() {
     RecordingSimulatorSonarClient simulatorSonarClient = new RecordingSimulatorSonarClient();
     RecordingSonarPublisher sonarPublisher = new RecordingSonarPublisher();
     SonarPollingService sonarPollingService = service("backend", "ignored-vin",
         simulatorSonarClient, sonarPublisher);
 
-    sonarPollingService.processBackendRawReading(
-        reading("D2S-DEMO-VIN-002", "FRONT", "100.00", Instant.now()));
+    sonarPollingService.processBackendDistanceMessage(new DistanceMessage(
+        "D2S-DEMO-VIN-002", 100.0, 2.5, DistanceMessage.Direction.FRONT,
+        Instant.parse("2026-06-05T10:00:00Z")));
 
     assertNull(simulatorSonarClient.requestedVin);
-    assertEquals(1, sonarPublisher.published.size());
+    assertEquals(0, sonarPublisher.published.size());
     List<SonarReadingDto> cached = sonarPollingService.readingsForVin("D2S-DEMO-VIN-002");
     assertEquals(1, cached.size());
-    assertEquals(sonarPublisher.published.getFirst().distanceMeters, cached.getFirst().distanceMeters);
+    assertEquals("FRONT", cached.getFirst().direction);
+    assertEquals(new BigDecimal("100.00"), cached.getFirst().distanceMeters);
+    assertEquals(new BigDecimal("2.50"), cached.getFirst().distanceChangeMetersPerSecond);
   }
 
   @Test
@@ -97,15 +100,6 @@ class SonarPollingServiceTest {
 
     assertEquals(new BigDecimal("1.00"), closing.distanceChangeMetersPerSecond);
     assertEquals(new BigDecimal("-2.00"), opening.distanceChangeMetersPerSecond);
-  }
-
-  @Test
-  void rawReadingCompletenessRequiresAllRawSensorValuesAndTimestamp() {
-    assertTrue(SonarPollingService.isCompleteRawReading(
-        reading("VIN-2", "FRONT", "50.00", Instant.now())));
-    assertFalse(SonarPollingService.isCompleteRawReading(
-        new SonarSensorReadingDto("VIN-2", "FRONT", new BigDecimal("50.00"), null,
-            new BigDecimal("50.00"), Instant.now())));
   }
 
   private static SonarPollingService service(String mode, String vin,
