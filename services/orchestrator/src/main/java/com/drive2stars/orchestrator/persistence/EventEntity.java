@@ -24,6 +24,10 @@ public class EventEntity extends PanacheEntity {
     @Column(name = "trigger_condition")
     public Integer triggerCondition;
 
+    @Column(nullable = false, name = "trigger_source")
+    @Enumerated(EnumType.STRING)
+    public TriggerSource triggeredBy;
+
     public static long clearAll() {
         return deleteAll();
     }
@@ -37,5 +41,10 @@ public class EventEntity extends PanacheEntity {
         EMERGENCY_BRAKE_SENT,       // ORCHESTRATOR sent brake command to BRAKENOW
         PRE_EMERGENCY_REPORTED,     // BRAKENOW reported entering pre-emergency state
         LOCAL_BRAKE_REPORTED        // BRAKENOW reported triggering brake locally
+    }
+
+    public enum TriggerSource {
+        ORCHESTRATOR,
+        BRAKENOW
     }
 }
