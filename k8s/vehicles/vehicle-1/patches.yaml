@@ -1,0 +1,129 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: brakenow
+spec:
+  selector:
+    matchLabels:
+      app: vehicle-1-brakenow
+  template:
+    metadata:
+      labels:
+        app: vehicle-1-brakenow
+    spec:
+      containers:
+        - name: brakenow
+          env:
+            - name: BRAKENOW_VIN
+              value: D2S-DEMO-VIN-001
+            - name: BRAKENOW_SONAR_QUEUE_NAME
+              value: brakenow.sonar.vehicle-1
+            - name: BRAKENOW_BRAKE_QUEUE_NAME
+              value: brakenow.brake.vehicle-1
+            - name: BRAKENOW_BRAKE_ROUTING_KEY
+              value: brake.D2S-DEMO-VIN-001
+            - name: BRAKENOW_SCENARIO_QUEUE_NAME
+              value: brakenow.scenario.vehicle-1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: brakenow
+spec:
+  selector:
+    app: vehicle-1-brakenow
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: simulator
+spec:
+  selector:
+    matchLabels:
+      app: vehicle-1-simulator
+  template:
+    metadata:
+      labels:
+        app: vehicle-1-simulator
+    spec:
+      containers:
+        - name: simulator
+          env:
+            - name: SIMULATOR_VIN
+              value: D2S-DEMO-VIN-001
+            - name: SIMULATOR_POSITION
+              value: "1"
+            - name: SIMULATOR_STATE_QUEUE_NAME
+              value: simulator.state.vehicle-1
+            - name: SIMULATOR_SCENARIO_QUEUE_NAME
+              value: simulator.scenario.vehicle-1
+            - name: SIMULATOR_BRAKENOW_BRAKE_QUEUE_NAME
+              value: simulator.brakenow.brake.vehicle-1
+            - name: SIMULATOR_BRAKENOW_BRAKE_ROUTING_KEY
+              value: brake.D2S-DEMO-VIN-001
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: simulator
+spec:
+  selector:
+    app: vehicle-1-simulator
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sonar
+spec:
+  selector:
+    matchLabels:
+      app: vehicle-1-sonar
+  template:
+    metadata:
+      labels:
+        app: vehicle-1-sonar
+    spec:
+      containers:
+        - name: sonar
+          env:
+            - name: SIMULATOR_BASE_URL
+              value: http://vehicle-1-simulator:8080
+            - name: SONAR_VIN
+              value: D2S-DEMO-VIN-001
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sonar
+spec:
+  selector:
+    app: vehicle-1-sonar
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: whereami
+spec:
+  selector:
+    matchLabels:
+      app: vehicle-1-whereami
+  template:
+    metadata:
+      labels:
+        app: vehicle-1-whereami
+    spec:
+      containers:
+        - name: whereami
+          env:
+            - name: WHEREAMI_VIN
+              value: D2S-DEMO-VIN-001
+            - name: SIMULATOR_BASE_URL
+              value: http://vehicle-1-simulator:8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: whereami
+spec:
+  selector:
+    app: vehicle-1-whereami
