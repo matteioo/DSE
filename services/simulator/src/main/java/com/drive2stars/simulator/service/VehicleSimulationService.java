@@ -207,6 +207,10 @@ public class VehicleSimulationService {
       return;
     }
 
+    if (emergencyBrakeActive && shouldResumeAfterBrake()) {
+      emergencyBrakeActive = false;
+      preEmergencyBrakeActive = false;
+    }
     speedMetersPerSecond = emergencyBrakeActive ? 0.0 : desiredScenarioSpeed();
     positionMeters += speedMetersPerSecond * elapsedSeconds;
     lastTick = currentTime;

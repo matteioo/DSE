@@ -3,6 +3,7 @@ package com.drive2stars.brakenow.service;
 import com.drive2stars.brakenow.mq.BrakePublisher;
 import com.drive2stars.brakenow.mq.SimulatorPublisher;
 import com.drive2stars.shared.messaging.BrakeMessage;
+import com.drive2stars.shared.messaging.DistanceMessage;
 import com.drive2stars.shared.messaging.SimulatorBrakeMessage;
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -58,15 +59,24 @@ public class BrakeService {
      }
 
     /**
-     * @param vin the vehicle this reading belongs to
+     * @param vin        the vehicle this reading belongs to
      * @param distanceM  distance to the vehicle ahead in metres
      * @param closingMps closing rate in m/s, positive = approaching
+     * @param direction
      */
-    public void processDistance(String vin, double distanceM, double closingMps) {
+    public void processDistance(String vin, double distanceM, double closingMps, DistanceMessage.Direction direction) {
         boolean preEmergency = distanceM < PRE_EMERGENCY_THRESHOLD_M;
         int condition = evaluateCondition(distanceM, closingMps);
         boolean emergencyBrake = condition > 0;
-        updateAndPublish(vin, distanceM, emergencyBrake, preEmergency, condition);
+
+        // Once emergency fires, hold until the vehicle is beyond resumeDistanceM.
+        BrakeState prev = states.get(vin);
+        if (prev != null && prev.emergencyBrakeActive && distanceM < resumeDistanceM) {
+            emergencyBrake = true;
+            condition = prev.conditionTriggered;
+        }
+
+        updateAndPublish(vin, distanceM, emergencyBrake, preEmergency, condition, direction);
     }
 
 
@@ -90,51 +100,45 @@ public class BrakeService {
         return 0;
     }
 
-    private void updateAndPublish(String vin, double dist,
-                                   boolean emergencyBrake, boolean preEmergency, int condition) {
-        BrakeState prev = states.get(vin);
+    private void updateAndPublish(String vin,
+                                  double dist,
+                                  boolean emergencyBrake,
+                                  boolean preEmergency,
+                                  int condition,
+                                  DistanceMessage.Direction direction) {
+
         Instant now = Instant.now();
 
-        // Current reading no longer meets a condition but emergency brake stays active until safe distance
-        if (prev != null && prev.emergencyBrakeActive && !emergencyBrake && dist < resumeDistanceM) {
-            brakePublisher.publish(new BrakeMessage(vin, true, prev.preEmergencyBrake, prev.conditionTriggered, BrakeMessage.Source.BRAKENOW, now));
-            simulatorPublisher.publish(new SimulatorBrakeMessage(vin, true, prev.preEmergencyBrake, now));
-            return;
-        }
-
-        // Skip if nothing changed, unless emergency brake is active
-        if (prev != null
-                && prev.emergencyBrakeActive == emergencyBrake
-                && prev.preEmergencyBrake    == preEmergency
-                && prev.conditionTriggered   == condition) {
-            if (emergencyBrake) {
-                brakePublisher.publish(new BrakeMessage(vin, true, preEmergency, condition, BrakeMessage.Source.BRAKENOW, now));
-                simulatorPublisher.publish(new SimulatorBrakeMessage(vin, true, preEmergency, now));
-            }
-            return;
+        // Emergency braking only applies to vehicles in front.
+        if (direction != DistanceMessage.Direction.FRONT) {
+            emergencyBrake = false;
+            condition = 0;
+            BrakeState prevState = states.get(vin);
+            boolean wasPreEmergency = prevState != null && prevState.preEmergencyBrake;
+            if (!preEmergency && !wasPreEmergency) return;
         }
 
         BrakeState next = new BrakeState(vin, emergencyBrake, preEmergency, condition, now);
+
         states.put(vin, next);
 
         if (emergencyBrake) {
             LOG.infof("EMERGENCY BRAKE vin=%s condition=%d dist=%.1fm", vin, condition, dist);
         } else if (preEmergency) {
-            LOG.infof("Pre-emergency vin=%s dist=%.1fm", vin, dist);
+            LOG.infof("Pre-emergency vin=%s dist=%.1fm direction=%s", vin, dist, direction);
         } else {
             LOG.infof("Normal vin=%s dist=%.1fm", vin, dist);
         }
 
-
         brakePublisher.publish(
-              new BrakeMessage(vin, emergencyBrake, preEmergency, condition, BrakeMessage.Source.BRAKENOW, now));
-        SimulatorBrakeMessage simulatorBrakeMessage = new SimulatorBrakeMessage(vin,emergencyBrake, preEmergency, now);
-        simulatorPublisher.publish(simulatorBrakeMessage);
+                new BrakeMessage(vin, emergencyBrake, preEmergency, condition, BrakeMessage.Source.BRAKENOW, now));
+
+        simulatorPublisher.publish(
+                new SimulatorBrakeMessage(vin, emergencyBrake, preEmergency, now));
     }
 
-    public void processBrake(String vin, boolean active, Instant timestamp) {
-      SimulatorBrakeMessage simulatorBrakeMessage = new SimulatorBrakeMessage(vin,active, false, timestamp);
-
-      simulatorPublisher.publish(simulatorBrakeMessage);
+    public void processBrake(String vin, boolean active, int conditionTriggered, Instant timestamp) {
+        states.put(vin, new BrakeState(vin, active, false, conditionTriggered, timestamp));
+        simulatorPublisher.publish(new SimulatorBrakeMessage(vin, active, false, timestamp));
     }
 }
