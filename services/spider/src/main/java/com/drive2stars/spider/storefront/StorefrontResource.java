@@ -3,7 +3,6 @@ package com.drive2stars.spider.storefront;
 import com.drive2stars.spider.adapter.orchestrator.OrchestratorGrpcAdapter;
 import com.drive2stars.spider.storefront.dto.EventLogEntryDto;
 import com.drive2stars.spider.storefront.dto.VehicleStateDto;
-import com.drive2stars.spider.storefront.StorefrontService;
 import io.smallrye.common.annotation.Blocking;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.GET;
