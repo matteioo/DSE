@@ -70,12 +70,20 @@ public class StorefrontService {
             // vehicle with no FRONT sonar reading is at the front
             dto.role = dto.distanceToFrontM == null ? "LEAD" : "FOLLOWER";
 
+            CachedPosition before = positionCache.get(pos.vin);
+            boolean positionJustChanged = before != null
+                    && (Math.abs(before.lat() - pos.latitude) >= 1e-7
+                        || Math.abs(before.lon() - pos.longitude) >= 1e-7);
+
             dto.speedKmh = estimateSpeedKmh(pos);
 
             BrakeStateDto brake = brakeStates.get(pos.vin);
             if (brake != null) {
-                dto.emergencyBrakeActive = brake.emergencyBrakeActive;
-                dto.preEmergencyBrake    = brake.preEmergencyBrakeActive;
+                dto.preEmergencyBrake = brake.preEmergencyBrakeActive;
+                // Keep emergency brake displayed while vehicle is stopped (lat/lon unchanged or speed ≈ 0)
+                // Clear once the vehicle is moving again (position changed + real speed).
+                boolean vehicleMoving = positionJustChanged && dto.speedKmh > 0.5;
+                dto.emergencyBrakeActive = brake.emergencyBrakeActive && !vehicleMoving;
             }
 
             return dto;
@@ -96,6 +104,11 @@ public class StorefrontService {
         boolean positionUnchanged = Math.abs(cached.lat() - pos.latitude) < 1e-7
                                  && Math.abs(cached.lon() - pos.longitude) < 1e-7;
         if (positionUnchanged) {
+            long elapsedSinceLastChange = now.toEpochMilli() - cached.seenAt().toEpochMilli();
+            if (elapsedSinceLastChange > 15_000) {
+                positionCache.put(pos.vin, new CachedPosition(cached.lat(), cached.lon(), now, 0.0));
+                return 0.0;
+            }
             return cached.speedKmh();
         }
 
