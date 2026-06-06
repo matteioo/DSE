@@ -100,12 +100,7 @@ public class BrakeService {
         return 0;
     }
 
-    private void updateAndPublish(String vin,
-                                  double dist,
-                                  boolean emergencyBrake,
-                                  boolean preEmergency,
-                                  int condition,
-                                  DistanceMessage.Direction direction) {
+    private void updateAndPublish(String vin, double dist, boolean emergencyBrake, boolean preEmergency, int condition, DistanceMessage.Direction direction) {
 
         Instant now = Instant.now();
 

@@ -23,7 +23,6 @@ export function publishScenario(scenario: ScenarioCommand): void {
   if (!client.connected) {
     throw new Error('Not connected to RabbitMQ — is the broker running?')
   }
-  // Fanout exchange — routing key is ignored but required by STOMP protocol
   client.publish({
     destination: '/exchange/d2s.simulator.scenario/scenario',
     body: scenario,
