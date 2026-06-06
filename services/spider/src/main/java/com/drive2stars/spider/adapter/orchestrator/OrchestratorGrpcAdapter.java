@@ -1,9 +1,13 @@
 package com.drive2stars.spider.adapter.orchestrator;
 
 import com.drive2stars.grpc.orchestrator.BrakeEvent;
+import com.drive2stars.grpc.orchestrator.GetBrakeStatesRequest;
+import com.drive2stars.grpc.orchestrator.GetBrakeStatesResponse;
 import com.drive2stars.grpc.orchestrator.GetEventsRequest;
 import com.drive2stars.grpc.orchestrator.GetEventsResponse;
 import com.drive2stars.grpc.orchestrator.OrchestratorServiceGrpc;
+import com.drive2stars.grpc.orchestrator.VehicleBrakeState;
+import com.drive2stars.spider.storefront.dto.BrakeStateDto;
 import com.drive2stars.spider.storefront.dto.EventLogEntryDto;
 import io.quarkus.grpc.GrpcClient;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -12,7 +16,9 @@ import org.jboss.logging.Logger;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class OrchestratorGrpcAdapter {
@@ -35,6 +41,22 @@ public class OrchestratorGrpcAdapter {
     List<EventLogEntryDto> getRecentEventsFallback(int limit, Throwable cause) {
         LOG.warnf("Falling back to empty event log: %s", cause.getMessage());
         return List.of();
+    }
+
+    @Fallback(fallbackMethod = "getBrakeStatesFallback")
+    public Map<String, BrakeStateDto> getBrakeStates() {
+        GetBrakeStatesResponse response = stub.withDeadlineAfter(5, TimeUnit.SECONDS)
+                .getBrakeStates(GetBrakeStatesRequest.newBuilder().build());
+
+        return response.getStatesList().stream()
+                .collect(Collectors.toMap(
+                        VehicleBrakeState::getVin,
+                        s -> new BrakeStateDto(s.getVin(), s.getEmergencyBrakeActive(), s.getPreEmergencyBrakeActive())));
+    }
+
+    Map<String, BrakeStateDto> getBrakeStatesFallback(Throwable cause) {
+        LOG.warnf("Falling back to empty brake states: %s", cause.getMessage());
+        return Map.of();
     }
 
     private EventLogEntryDto toDto(BrakeEvent e) {

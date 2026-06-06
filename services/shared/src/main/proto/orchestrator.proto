@@ -5,6 +5,7 @@ option java_package = "com.drive2stars.grpc.orchestrator";
 
 service OrchestratorService {
   rpc GetEvents (GetEventsRequest) returns (GetEventsResponse);
+  rpc GetBrakeStates (GetBrakeStatesRequest) returns (GetBrakeStatesResponse);
 }
 
 message GetEventsRequest {
@@ -21,4 +22,16 @@ message BrakeEvent {
   string event_type = 3; // EMERGENCY_BRAKE_SENT | PRE_EMERGENCY_REPORTED | LOCAL_BRAKE_REPORTED
   int32  trigger_condition = 4; // 1-4, 0 if unknown
   string triggered_by = 5; // ORCHESTRATOR | UTRACKED
+}
+
+message GetBrakeStatesRequest {}
+
+message GetBrakeStatesResponse {
+  repeated VehicleBrakeState states = 1;
+}
+
+message VehicleBrakeState {
+  string vin = 1;
+  bool emergency_brake_active = 2;
+  bool pre_emergency_brake_active = 3;
 }
