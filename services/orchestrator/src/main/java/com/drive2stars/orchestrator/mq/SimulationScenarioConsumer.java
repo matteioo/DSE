@@ -1,5 +1,6 @@
 package com.drive2stars.orchestrator.mq;
 
+import com.drive2stars.orchestrator.service.BrakeStateService;
 import com.drive2stars.orchestrator.service.EventService;
 import com.drive2stars.orchestrator.service.SimulationResetStateService;
 import com.drive2stars.shared.messaging.SimulationScenarioCommand;
@@ -17,11 +18,14 @@ public class SimulationScenarioConsumer {
 
   private final EventService eventService;
   private final SimulationResetStateService simulationResetStateService;
+  private final BrakeStateService brakeStateService;
 
   public SimulationScenarioConsumer(EventService eventService,
-      SimulationResetStateService simulationResetStateService) {
+      SimulationResetStateService simulationResetStateService,
+      BrakeStateService brakeStateService) {
     this.eventService = eventService;
     this.simulationResetStateService = simulationResetStateService;
+    this.brakeStateService = brakeStateService;
   }
 
   @Incoming("scenario-command")
@@ -34,7 +38,8 @@ public class SimulationScenarioConsumer {
 
     long deleted = eventService.clearEvents();
     simulationResetStateService.recordReset();
-    LOG.infof("Cleared %d ORCHESTRATOR events after simulation reset", deleted);
+    brakeStateService.clearAll();
+    LOG.infof("Cleared %d ORCHESTRATOR events and brake state after simulation reset", deleted);
   }
 
   private SimulationScenarioCommand decode(byte[] raw) {

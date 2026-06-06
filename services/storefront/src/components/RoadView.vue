@@ -22,8 +22,10 @@ const followerX = computed(() => 32)
 const leadX = computed(() => followerX.value + pixelGap.value + CAR_W)
 
 function carColor(v: VehicleState | undefined): string {
-  return v.emergencyBrakeActive ? '#ef4444' : '#4ade80'
-
+  if (!v) return '#4ade80'
+  if (v.emergencyBrakeActive) return '#ef4444'
+  if (v.preEmergencyBrake) return '#facc15'
+  return '#4ade80'
 }
 
 function labelY(offset: number) {
@@ -102,6 +104,7 @@ function labelY(offset: number) {
 
     <div class="legend">
       <span class="dot normal"></span>Normal
+      <span class="dot pre-emergency"></span>Pre-Emergency
       <span class="dot emergency"></span>Emergency Brake
     </div>
   </div>
@@ -142,6 +145,9 @@ function labelY(offset: number) {
 
 .dot.normal {
   background: #4ade80;
+}
+.dot.pre-emergency {
+  background: #facc15;
 }
 .dot.emergency {
   background: #ef4444;

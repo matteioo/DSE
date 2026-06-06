@@ -14,5 +14,6 @@ public class VehicleStateDto {
     public Double distanceToRearM;
     public double distanceChangeMps;
     public boolean emergencyBrakeActive;
+    public boolean preEmergencyBrake;
     public Instant updatedAt;
 }

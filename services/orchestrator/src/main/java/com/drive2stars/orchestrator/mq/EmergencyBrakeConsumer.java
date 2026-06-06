@@ -1,5 +1,6 @@
 package com.drive2stars.orchestrator.mq;
 
+import com.drive2stars.orchestrator.service.BrakeStateService;
 import com.drive2stars.orchestrator.service.EventService;
 import com.drive2stars.shared.messaging.BrakeMessage;
 import io.smallrye.reactive.messaging.annotations.Blocking;
@@ -17,9 +18,11 @@ public class EmergencyBrakeConsumer {
     private static final Logger LOG = Logger.getLogger(EmergencyBrakeConsumer.class);
 
     private final EventService eventService;
+    private final BrakeStateService brakeStateService;
 
-    public EmergencyBrakeConsumer(EventService eventService) {
+    public EmergencyBrakeConsumer(EventService eventService, BrakeStateService brakeStateService) {
         this.eventService = eventService;
+        this.brakeStateService = brakeStateService;
     }
 
     @Incoming("brake-in")
@@ -39,6 +42,8 @@ public class EmergencyBrakeConsumer {
         LOG.infof(
                 "Received emergency brake message from %s for VIN %s (%s): active=%s, conditionTriggered=%s",
                 msg.source, msg.vin, msg.timestamp, msg.active, msg.conditionTriggered);
+
+        brakeStateService.update(msg);
 
         // Skip own messages (already persisted when triggering)
         if (msg.source == BrakeMessage.Source.ORCHESTRATOR) {
