@@ -92,45 +92,6 @@ services:
 
 ---
 
-## RabbitMQ Messaging Structure
-
-Management UI: http://localhost:15672 (credentials: `dse` / `dse`)
-
-### Exchanges
-
-| Exchange    | Type    | Description                  |
-|-------------|---------|------------------------------|
-| `vehicle.gps` | direct | GPS positions from WHEREAMI |
-
-### Queues & Bindings
-
-| Queue         | Exchange      | Routing Key | Consumer  |
-|---------------|---------------|-------------|-----------|
-| `utracked.gps` | `vehicle.gps` | `gps`       | UTRACKED  |
-
-### Channel names (application.properties)
-
-| Service   | Direction | Channel name     | Exchange      | Routing Key |
-|-----------|-----------|------------------|---------------|-------------|
-| WHEREAMI  | outgoing  | `vehicle-gps`    | `vehicle.gps` | `gps`       |
-| UTRACKED  | incoming  | `vehicle-position` | `vehicle.gps` | `gps`       |
-
-> Channel names are internal SmallRye identifiers (`mp.messaging.incoming/outgoing.<name>`).
-> They do not need to match between services — only the exchange and routing key must align.
-
-### Adding a new channel
-
-1. Add to `application.properties`:
-   ```properties
-   mp.messaging.outgoing.<channel-name>.connector=smallrye-rabbitmq
-   mp.messaging.outgoing.<channel-name>.exchange.name=<exchange>
-   mp.messaging.outgoing.<channel-name>.routing-key=<key>
-   ```
-2. Annotate the publisher method with `@Outgoing("<channel-name>")`.
-3. Update the table above.
-
----
-
 ## Kubernetes (Minikube)
 
 ### Prerequisites
