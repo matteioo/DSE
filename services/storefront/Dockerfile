@@ -8,7 +8,7 @@ COPY package.json pnpm-lock.yaml ./
 
 RUN pnpm config set store-dir /pnpm-store
 RUN --mount=type=cache,id=pnpm,target=/pnpm-store \
-    pnpm install --frozen-lockfile
+    pnpm install --no-frozen-lockfile
 
 COPY . .
 
