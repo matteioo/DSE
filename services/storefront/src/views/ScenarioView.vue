@@ -44,7 +44,7 @@ function send(cmd: ScenarioCommand) {
         v-for="s in scenarios"
         :key="s.cmd"
         class="scenario-btn"
-        :class="{ active: lastSent === s.cmd, loading: pending === s.cmd }"
+        :class="{ active: lastSent === s.cmd }"
         :disabled="!stompConnected"
         @click="send(s.cmd)"
       >
@@ -55,12 +55,11 @@ function send(cmd: ScenarioCommand) {
 
     <div class="divider" />
 
-    <button
-      class="reset-btn"
-      :class="{ loading: pending === 'RESET' }"
-      :disabled="!stompConnected"
-      @click="send('RESET')"
-    >
+   <button
+     class="reset-btn"
+     :disabled="!stompConnected"
+     @click="send('RESET')"
+   >
       Reset Simulation
     </button>
 
