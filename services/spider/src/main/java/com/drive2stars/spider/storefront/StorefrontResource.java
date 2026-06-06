@@ -1,9 +1,10 @@
 package com.drive2stars.spider.storefront;
 
+import com.drive2stars.spider.adapter.orchestrator.OrchestratorGrpcAdapter;
 import com.drive2stars.spider.storefront.dto.EventLogEntryDto;
 import com.drive2stars.spider.storefront.dto.VehicleStateDto;
+import io.smallrye.common.annotation.Blocking;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.Path;
@@ -18,21 +19,26 @@ import org.eclipse.microprofile.openapi.annotations.Operation;
 @ApplicationScoped
 public class StorefrontResource {
 
-    @Inject
+    OrchestratorGrpcAdapter orchestratorAdapter;
     StorefrontMockService mockService;
+
     // TODO: replace mockService with real adapters
     //   Sonar      — distance to the vehicle in front and back, distance change rate
-    //   Utracked   — GPS data identified by VIN
-    //   Orchestrator — can send data to vehicles, eg brake
+    public StorefrontResource(OrchestratorGrpcAdapter orchestratorAdapter, StorefrontMockService mockService) {
+        this.orchestratorAdapter = orchestratorAdapter;
+        this.mockService = mockService;
+    }
 
     @GET
     @Path("/vehicles")
+    @Blocking
     public List<VehicleStateDto> getVehicles() {
         return mockService.getVehicleStates();
     }
 
     @GET
     @Path("/vehicles/{vin}")
+    @Blocking
     @Operation(summary = "Single vehicle state by VIN")
     public VehicleStateDto getVehicle(@PathParam("vin") String vin) {
         VehicleStateDto dto = mockService.getVehicleState(vin);
@@ -44,7 +50,8 @@ public class StorefrontResource {
 
     @GET
     @Path("/events")
+    @Blocking
     public List<EventLogEntryDto> getEvents() {
-        return mockService.getEventLog();
+        return orchestratorAdapter.getRecentEvents(100);
     }
 }
