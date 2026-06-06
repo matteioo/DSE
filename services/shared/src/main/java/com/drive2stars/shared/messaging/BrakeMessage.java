@@ -15,7 +15,7 @@ public class BrakeMessage {
     public String vin;
     public boolean active;
     public boolean preEmergencyBrake;
-    /** 1–3 for BRAKENOW-evaluated conditions, 4 for ORCHESTRATOR */
+    /** 1–3 = distance/closing conditions, 4 = ORCHESTRATOR plausibility check (GPS/SONAR deviation). */
     public int conditionTriggered;
     /** "BRAKENOW" or "ORCHESTRATOR" */
     public Source source;
