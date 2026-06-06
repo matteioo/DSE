@@ -34,11 +34,12 @@ public class BrakeStateService {
                 msg.timestamp != null ? msg.timestamp : Instant.now()));
     }
 
+    public void clearAll() {
+        states.clear();
+    }
+
     public Collection<VehicleBrakeState> getAllStates() {
         return states.values();
     }
 
-    public VehicleBrakeState getState(String vin) {
-        return states.get(vin);
-    }
 }

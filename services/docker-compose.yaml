@@ -8,10 +8,15 @@ services:
       - "5672:5672"
       - "15672:15672"
     healthcheck:
-      test: rabbitmq-diagnostics -q ping
+      test: rabbitmq-diagnostics -q check_port_connectivity
       interval: 10s
-      timeout: 5s
-      retries: 5
+      timeout: 10s
+      retries: 10
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          memory: 384m
 
   postgres:
     image: postgres:18-alpine
@@ -28,21 +33,6 @@ services:
     volumes:
       - ./docker/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql
 
-  brakenow:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        SERVICE: brakenow
-    ports:
-      - "8081:8080"
-    environment:
-      RABBITMQ_HOST: rabbitmq
-      RABBITMQ_PORT: 5672
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-    profiles: [app]
 
   orchestrator:
     build:

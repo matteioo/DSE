@@ -30,9 +30,14 @@ public class EventService {
      */
     @Transactional
     public void recordBrake(BrakeMessage msg) {
-        EventEntity.BrakeEventType type = msg.active
-                ? EventEntity.BrakeEventType.LOCAL_BRAKE_REPORTED
-                : EventEntity.BrakeEventType.PRE_EMERGENCY_REPORTED;
+        EventEntity.BrakeEventType type;
+        if (msg.active) {
+            type = EventEntity.BrakeEventType.LOCAL_BRAKE_REPORTED;
+        } else if (msg.preEmergencyBrake) {
+            type = EventEntity.BrakeEventType.PRE_EMERGENCY_REPORTED;
+        } else {
+            return; // brake cleared
+        }
         persist(msg.vin, msg.timestamp, type, msg.conditionTriggered, EventEntity.TriggerSource.BRAKENOW);
     }
 
