@@ -12,6 +12,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 @ApplicationScoped
@@ -19,6 +20,8 @@ public class StorefrontService {
 
     private record CachedPosition(double lat, double lon, Instant seenAt, double speedKmh) {}
     private final Map<String, CachedPosition> positionCache = new ConcurrentHashMap<>();
+    // true when emergency brake fires releases once signal clears, speed is 0.
+    private final Set<String> brakeLatch = ConcurrentHashMap.newKeySet();
 
     private final UtrackedGrpcAdapter utrackedAdapter;
     private final OrchestratorGrpcAdapter orchestratorAdapter;
@@ -70,20 +73,19 @@ public class StorefrontService {
             // vehicle with no FRONT sonar reading is at the front
             dto.role = dto.distanceToFrontM == null ? "LEAD" : "FOLLOWER";
 
-            CachedPosition before = positionCache.get(pos.vin);
-            boolean positionJustChanged = before != null
-                    && (Math.abs(before.lat() - pos.latitude) >= 1e-7
-                        || Math.abs(before.lon() - pos.longitude) >= 1e-7);
-
             dto.speedKmh = estimateSpeedKmh(pos);
 
             BrakeStateDto brake = brakeStates.get(pos.vin);
             if (brake != null) {
                 dto.preEmergencyBrake = brake.preEmergencyBrakeActive;
-                // Keep emergency brake displayed while vehicle is stopped (lat/lon unchanged or speed ≈ 0)
-                // Clear once the vehicle is moving again (position changed + real speed).
-                boolean vehicleMoving = positionJustChanged && dto.speedKmh > 0.5;
-                dto.emergencyBrakeActive = brake.emergencyBrakeActive && !vehicleMoving;
+                // when emergency fires so red stays visible through
+                // release when safe no emergency
+                if (brake.emergencyBrakeActive) {
+                    brakeLatch.add(pos.vin);
+                } else if (!brake.preEmergencyBrakeActive || dto.speedKmh < 0.5) {
+                    brakeLatch.remove(pos.vin);
+                }
+                dto.emergencyBrakeActive = brake.emergencyBrakeActive || brakeLatch.contains(pos.vin);
             }
 
             return dto;
