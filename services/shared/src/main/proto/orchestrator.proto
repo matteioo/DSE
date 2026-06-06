@@ -1,0 +1,23 @@
+syntax = "proto3";
+package com.drive2stars.grpc;
+option java_multiple_files = true;
+option java_package = "com.drive2stars.grpc.orchestrator";
+
+service OrchestratorService {
+  rpc GetEvents (GetEventsRequest) returns (GetEventsResponse);
+}
+
+message GetEventsRequest {
+  int32 limit = 1; // 0 = no limit, use e.g. 50 for the event log
+}
+
+message GetEventsResponse {
+  repeated BrakeEvent events = 1;
+}
+
+message BrakeEvent {
+  string vin = 1;
+  string timestamp = 2; // ISO 8601 format
+  string event_type = 3; // EMERGENCY_BRAKE_SENT | PRE_EMERGENCY_REPORTED | LOCAL_BRAKE_REPORTED
+  int32  trigger_condition = 4; // 1-4, 0 if unknown
+}

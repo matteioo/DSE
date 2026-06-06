@@ -6,13 +6,14 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
 import java.time.Instant;
+import java.util.List;
 
 @ApplicationScoped
 public class EventService {
 
     @Transactional
     public long clearEvents() {
-        return EventEntity.deleteAll();
+        return EventEntity.clearAll();
     }
 
     @Transactional
@@ -27,6 +28,10 @@ public class EventService {
                 ? EventEntity.BrakeEventType.LOCAL_BRAKE_REPORTED
                 : EventEntity.BrakeEventType.PRE_EMERGENCY_REPORTED;
         persist(msg.vin, msg.timestamp, type, msg.conditionTriggered);
+    }
+
+    public List<EventEntity> getRecentEvents(int limit) {
+        return EventEntity.findRecent(limit);
     }
 
     private void persist(String vin, Instant timestamp, EventEntity.BrakeEventType eventType,
