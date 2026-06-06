@@ -6,6 +6,16 @@ variable "TAG" {
   default = "latest"
 }
 
+# Set to e.g. gcr.io/my-project for GKE builds; leave empty for local/Minikube
+variable "REGISTRY" {
+  default = ""
+}
+
+function "img" {
+  params = [name]
+  result = REGISTRY != "" ? "${REGISTRY}/${name}:${TAG}" : "${name}:${TAG}"
+}
+
 target "base-java" {
   context    = "./services"
   dockerfile = "Dockerfile"
@@ -14,47 +24,47 @@ target "base-java" {
 target "brakenow" {
   inherits = ["base-java"]
   args     = { SERVICE = "brakenow" }
-  tags     = ["brakenow:${TAG}"]
+  tags     = [img("brakenow")]
 }
 
 target "orchestrator" {
   inherits = ["base-java"]
   args     = { SERVICE = "orchestrator" }
-  tags     = ["orchestrator:${TAG}"]
+  tags     = [img("orchestrator")]
 }
 
 target "simulator" {
   inherits = ["base-java"]
   args     = { SERVICE = "simulator" }
-  tags     = ["simulator:${TAG}"]
+  tags     = [img("simulator")]
 }
 
 target "sonar" {
   inherits = ["base-java"]
   args     = { SERVICE = "sonar" }
-  tags     = ["sonar:${TAG}"]
+  tags     = [img("sonar")]
 }
 
 target "spider" {
   inherits = ["base-java"]
   args     = { SERVICE = "spider" }
-  tags     = ["spider:${TAG}"]
+  tags     = [img("spider")]
 }
 
 target "utracked" {
   inherits = ["base-java"]
   args     = { SERVICE = "utracked" }
-  tags     = ["utracked:${TAG}"]
+  tags     = [img("utracked")]
 }
 
 target "whereami" {
   inherits = ["base-java"]
   args     = { SERVICE = "whereami" }
-  tags     = ["whereami:${TAG}"]
+  tags     = [img("whereami")]
 }
 
 target "storefront" {
   context    = "./services/storefront"
   dockerfile = "Dockerfile"
-  tags       = ["storefront:${TAG}"]
+  tags       = [img("storefront")]
 }
