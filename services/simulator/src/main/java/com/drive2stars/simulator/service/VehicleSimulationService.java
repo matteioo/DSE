@@ -162,7 +162,7 @@ public class VehicleSimulationService {
     }
     advance();
     emergencyBrakeActive = message.brakeActive;
-    preEmergencyBrakeActive = message.preBreak && !message.brakeActive;
+    preEmergencyBrakeActive = message.preBrake && !message.brakeActive;
     if (message.brakeActive) {
       speedMetersPerSecond = 0.0;
     } else {
