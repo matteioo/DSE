@@ -4,7 +4,6 @@ import com.drive2stars.grpc.sonar.GetLatestReadingsRequest;
 import com.drive2stars.grpc.sonar.GetLatestReadingsResponse;
 import com.drive2stars.grpc.sonar.SonarReading;
 import com.drive2stars.grpc.sonar.SonarServiceGrpc;
-import com.drive2stars.sonar.endpoint.SonarReadingDto;
 import com.drive2stars.sonar.service.SonarPollingService;
 import io.grpc.stub.StreamObserver;
 import io.quarkus.grpc.GrpcService;

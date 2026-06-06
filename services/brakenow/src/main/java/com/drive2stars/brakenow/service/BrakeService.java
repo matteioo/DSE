@@ -62,7 +62,7 @@ public class BrakeService {
      * @param vin        the vehicle this reading belongs to
      * @param distanceM  distance to the vehicle ahead in metres
      * @param closingMps closing rate in m/s, positive = approaching
-     * @param direction
+     * @param direction  Front or back vehicle
      */
     public void processDistance(String vin, double distanceM, double closingMps, DistanceMessage.Direction direction) {
         boolean preEmergency = distanceM < PRE_EMERGENCY_THRESHOLD_M;
