@@ -164,7 +164,11 @@ class BrakeServiceTest {
 
         service.processDistance("VIN-1", 100.0, -1.0);
 
-        verifyNoInteractions(brakePublisher, simulatorPublisher);
+       BrakeMessage msg = captureBreakMessage();
+       assertTrue(msg.active);
+
+       SimulatorBrakeMessage sim = captureSimulatorMessage();
+      assertTrue(sim.brakeActive);
     }
 
     @Test
