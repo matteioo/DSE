@@ -32,6 +32,7 @@ public class OrchestratorGrpcService extends OrchestratorServiceGrpc.Orchestrato
                 .setTimestamp(e.timestamp.toString())
                 .setEventType(e.eventType.name())
                 .setTriggerCondition(e.triggerCondition != null ? e.triggerCondition : 0)
+                .setTriggeredBy(e.triggeredBy.name())
                 .build())
             .toList();
 

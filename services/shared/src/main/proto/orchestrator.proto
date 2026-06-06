@@ -20,4 +20,5 @@ message BrakeEvent {
   string timestamp = 2; // ISO 8601 format
   string event_type = 3; // EMERGENCY_BRAKE_SENT | PRE_EMERGENCY_REPORTED | LOCAL_BRAKE_REPORTED
   int32  trigger_condition = 4; // 1-4, 0 if unknown
+  string triggered_by = 5; // ORCHESTRATOR | UTRACKED
 }

@@ -40,10 +40,17 @@ public class OrchestratorGrpcAdapter {
     private EventLogEntryDto toDto(BrakeEvent e) {
         EventLogEntryDto dto = new EventLogEntryDto();
         dto.timestamp = Instant.parse(e.getTimestamp());
-        dto.source = "ORCHESTRATOR";
-        dto.level = e.getEventType().contains("EMERGENCY") ? "ERROR" : "WARN";
+        dto.source = e.getTriggeredBy();
+        dto.level = logEntryLevel(e.getEventType());
         dto.message = formatMessage(e.getEventType(), e.getVin(), e.getTriggerCondition());
         return dto;
+    }
+
+    private String logEntryLevel(String level) {
+        return switch (level) {
+            case "PRE_EMERGENCY_REPORTED" -> "WARNING";
+            default -> "ERROR";
+        };
     }
 
     private String formatMessage(String eventType, String vin, int condition) {
