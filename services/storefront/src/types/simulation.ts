@@ -8,6 +8,7 @@ export interface VehicleState {
   distanceToRearM: number | null
   distanceChangeMps: number
   emergencyBrakeActive: boolean
+  preEmergencyBrake: boolean
   updatedAt: string
 }
 

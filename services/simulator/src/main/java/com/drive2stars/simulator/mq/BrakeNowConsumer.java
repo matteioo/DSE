@@ -1,6 +1,6 @@
 package com.drive2stars.simulator.mq;
 
-import com.drive2stars.shared.messaging.BrakeMessage;
+import com.drive2stars.shared.messaging.SimulatorBrakeMessage;
 import com.drive2stars.simulator.service.VehicleSimulationService;
 import io.smallrye.reactive.messaging.annotations.Blocking;
 import io.vertx.core.json.DecodeException;
@@ -12,28 +12,32 @@ import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
 
 @ApplicationScoped
-public class EmergencyBrakeConsumer {
+public class BrakeNowConsumer {
 
-  private static final Logger LOG = Logger.getLogger(EmergencyBrakeConsumer.class);
+  private static final Logger LOG = Logger.getLogger(BrakeNowConsumer.class);
 
   @Inject
   VehicleSimulationService vehicleSimulationService;
 
-  @Incoming("brake-in")
+  @Incoming("brakenow-brake-in")
   @Blocking
   public void process(byte[] raw) {
-    BrakeMessage message;
+    SimulatorBrakeMessage message;
     try {
-      message = new JsonObject(new String(raw, StandardCharsets.UTF_8)).mapTo(BrakeMessage.class);
+      message = new JsonObject(new String(raw, StandardCharsets.UTF_8))
+          .mapTo(SimulatorBrakeMessage.class);
     } catch (DecodeException e) {
-      LOG.errorf("Dropping malformed emergency brake message: %s", e.getMessage());
+      LOG.errorf("Dropping malformed brakenow brake message: %s", e.getMessage());
       return;
     }
 
     if (message == null || message.vin == null || message.timestamp == null) {
-      LOG.errorf("Dropping incomplete emergency brake message: %s", message);
+      LOG.errorf("Dropping incomplete brakenow brake message: %s", message);
       return;
     }
+
+    LOG.infof("Received brakenow brake message for VIN %s: brakeActive=%b preBreak=%b",
+        message.vin, message.brakeActive, message.preBreak);
     vehicleSimulationService.applyBrakeMessage(message);
   }
 }

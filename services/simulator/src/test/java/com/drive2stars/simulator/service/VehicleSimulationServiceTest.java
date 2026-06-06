@@ -1,7 +1,7 @@
 package com.drive2stars.simulator.service;
 
-import com.drive2stars.shared.messaging.BrakeMessage;
 import com.drive2stars.shared.messaging.SimulationScenarioCommand;
+import com.drive2stars.shared.messaging.SimulatorBrakeMessage;
 import com.drive2stars.shared.messaging.SimulatorVehicleStateMessage;
 import com.drive2stars.simulator.endpoint.SonarSensorReadingDto;
 import java.math.BigDecimal;
@@ -131,9 +131,11 @@ class VehicleSimulationServiceTest {
     VehicleSimulationService follower = simulator("VIN-2", 2, clock);
     follower.applyScenarioCommand(command(SimulationScenarioCommand.Scenario.SCENARIO_2));
     follower.applyBrakeMessage(brake("VIN-2", true));
-    follower.updatePeerState(state("VIN-1", 1, 100.0, 20.0,
-        SimulationScenarioCommand.Scenario.SCENARIO_2));
+    clock.advance(Duration.ofSeconds(1));
+    assertEquals(0.0, follower.currentStateMessage().speedMetersPerSecond);
 
+    // BrakeNow clears the brake once vehicles separated
+    follower.applyBrakeMessage(brake("VIN-2", false));
     clock.advance(Duration.ofSeconds(1));
 
     assertEquals(25.0, follower.currentStateMessage().speedMetersPerSecond);
@@ -145,7 +147,8 @@ class VehicleSimulationServiceTest {
     VehicleSimulationService follower = simulator("VIN-2", 2, clock);
     follower.applyScenarioCommand(command(SimulationScenarioCommand.Scenario.SCENARIO_2));
     follower.applyBrakeMessage(brake("VIN-2", true));
-    follower.updatePeerState(state("VIN-1", 1, 100.0, 20.0,
+
+    follower.updatePeerState(state("VIN-1", 1, 400.0, 20.0,
         SimulationScenarioCommand.Scenario.SCENARIO_2));
 
     clock.advance(Duration.ofSeconds(4));
@@ -218,8 +221,8 @@ class VehicleSimulationServiceTest {
     return new SimulationScenarioCommand(scenario, Instant.parse("2026-06-05T10:00:00Z"));
   }
 
-  private static BrakeMessage brake(String vin, boolean active) {
-    return new BrakeMessage(vin, active, 1, BrakeMessage.Source.ORCHESTRATOR,
+  private static SimulatorBrakeMessage brake(String vin, boolean brakeActive) {
+    return new SimulatorBrakeMessage(vin, brakeActive, false,
         Instant.parse("2026-06-05T10:00:00Z"));
   }
 

@@ -24,6 +24,7 @@ public class SimulatorPublisher {
     emitter.send(Message.of(payload)
             .addMetadata(OutgoingRabbitMQMetadata.builder()
                     .withContentType("application/json")
+                    .withRoutingKey("brake." + message.vin)
                     .build()));
     LOG.infof("Published BrakeMessage to SIMULATOR: vin=%s active=%b preBreak=%b",
             message.vin, message.brakeActive, message.preBreak);
