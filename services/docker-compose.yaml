@@ -326,6 +326,8 @@ services:
     ports:
       - "3000:80"
     depends_on:
-      - spider
-      - rabbitmq
+      rabbitmq:
+        condition: service_healthy
+      spider:
+          condition: service_started
     profiles: [app]
