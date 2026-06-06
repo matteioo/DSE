@@ -4,6 +4,7 @@ import com.drive2stars.sonar.endpoint.SimulatorSonarClient;
 import com.drive2stars.sonar.endpoint.SonarReadingDto;
 import com.drive2stars.sonar.endpoint.SonarSensorReadingDto;
 import com.drive2stars.sonar.mq.SonarPublisher;
+import com.drive2stars.shared.messaging.DistanceMessage;
 import io.quarkus.scheduler.Scheduled;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -84,23 +85,17 @@ public class SonarPollingService {
     }
   }
 
-  public void processBackendRawReading(SonarSensorReadingDto sensorReading) {
+  public void processBackendDistanceMessage(DistanceMessage message) {
     if (!isBackendMode()) {
       return;
     }
-    for (SonarReadingDto reading : fuseAndCache(List.of(sensorReading))) {
-      sonarPublisher.publish(reading);
-    }
-  }
-
-  public static boolean isCompleteRawReading(SonarSensorReadingDto reading) {
-    return reading != null
-        && reading.vin != null
-        && reading.direction != null
-        && reading.radarDistanceMeters != null
-        && reading.lidarDistanceMeters != null
-        && reading.ultrasonicDistanceMeters != null
-        && reading.measuredAt != null;
+    SonarReadingDto reading = new SonarReadingDto(
+        message.vin,
+        message.direction.name(),
+        toScaledBigDecimal(message.distanceMeters),
+        toScaledBigDecimal(message.changeRateMps),
+        message.timestamp);
+    latestReadings.put(key(reading.vin, reading.direction), reading);
   }
 
   public static List<SonarReadingDto> fuseReadings(List<SonarSensorReadingDto> sensorReadings,
@@ -166,6 +161,10 @@ public class SonarPollingService {
 
   private static String key(String vin, String direction) {
     return vin + "|" + direction;
+  }
+
+  private static BigDecimal toScaledBigDecimal(double value) {
+    return BigDecimal.valueOf(value).setScale(2, RoundingMode.HALF_UP);
   }
 
   private void publishVehicleReadings(String requestedVin) {
