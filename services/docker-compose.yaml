@@ -91,7 +91,6 @@ services:
       RABBITMQ_PORT: 5672
       SIMULATOR_VIN: D2S-DEMO-VIN-001
       SIMULATOR_POSITION: 1
-      SIMULATOR_SONAR_PUBLISH_INTERVAL: 1s
       SIMULATOR_STATE_PUBLISH_INTERVAL: 500ms
       SIMULATOR_PEER_STATE_MAX_AGE_SECONDS: 3
       SIMULATOR_STATE_QUEUE_NAME: simulator.state.vehicle-1
@@ -116,7 +115,6 @@ services:
       RABBITMQ_PORT: 5672
       SIMULATOR_VIN: D2S-DEMO-VIN-002
       SIMULATOR_POSITION: 2
-      SIMULATOR_SONAR_PUBLISH_INTERVAL: 1s
       SIMULATOR_STATE_PUBLISH_INTERVAL: 500ms
       SIMULATOR_PEER_STATE_MAX_AGE_SECONDS: 3
       SIMULATOR_STATE_QUEUE_NAME: simulator.state.vehicle-2
@@ -140,8 +138,8 @@ services:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       SONAR_MODE: backend
-      SONAR_RAW_CONSUMER_ENABLED: "true"
-      SONAR_RAW_QUEUE_NAME: sonar.raw.backend
+      SONAR_BACKEND_DISTANCE_CONSUMER_ENABLED: "true"
+      SONAR_BACKEND_DISTANCE_QUEUE_NAME: sonar.distance.backend
     depends_on:
       rabbitmq:
         condition: service_healthy
