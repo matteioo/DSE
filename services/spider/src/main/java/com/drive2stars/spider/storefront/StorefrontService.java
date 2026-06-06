@@ -106,12 +106,8 @@ public class StorefrontService {
         boolean positionUnchanged = Math.abs(cached.lat() - pos.latitude) < 1e-7
                                  && Math.abs(cached.lon() - pos.longitude) < 1e-7;
         if (positionUnchanged) {
-            long elapsedSinceLastChange = now.toEpochMilli() - cached.seenAt().toEpochMilli();
-            if (elapsedSinceLastChange > 15_000) {
-                positionCache.put(pos.vin, new CachedPosition(cached.lat(), cached.lon(), now, 0.0));
-                return 0.0;
-            }
-            return cached.speedKmh();
+            positionCache.put(pos.vin, new CachedPosition(cached.lat(), cached.lon(), now, 0.0));
+            return 0.0;
         }
 
         long elapsedMs = now.toEpochMilli() - cached.seenAt().toEpochMilli();
