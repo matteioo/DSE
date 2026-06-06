@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spider
+spec:
+  selector:
+    matchLabels:
+      app: spider
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: spider
+    spec:
+      containers:
+        - name: spider
+          image: "spider:latest"
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: UTRACKED_URL
+              value: http://utracked:8080
+            - name: ORCHESTRATOR_GRPC_HOST
+              value: orchestrator
+            - name: ORCHESTRATOR_GRPC_PORT
+              value: "9000"
+            - name: UTRACKED_GRPC_HOST
+              value: utracked
+            - name: UTRACKED_GRPC_PORT
+              value: "9000"
+          livenessProbe:
+            httpGet:
+              path: /q/health/live
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /q/health/ready
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: spider
+spec:
+  type: ClusterIP
+  selector:
+    app: spider
+  ports:
+    - port: 8080
+      targetPort: 8080
+      name: http
