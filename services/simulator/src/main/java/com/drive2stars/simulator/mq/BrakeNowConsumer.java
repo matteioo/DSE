@@ -36,8 +36,8 @@ public class BrakeNowConsumer {
       return;
     }
 
-    LOG.infof("Received brakenow brake message for VIN %s: brakeActive=%b preBreak=%b",
-        message.vin, message.brakeActive, message.preBreak);
+    LOG.infof("Received brakenow brake message for VIN %s: brakeActive=%b preBraek=%b",
+        message.vin, message.brakeActive, message.preBrake);
     vehicleSimulationService.applyBrakeMessage(message);
   }
 }

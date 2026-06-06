@@ -93,6 +93,7 @@ public class BrakeService {
     private void updateAndPublish(String vin, double dist,
                                    boolean emergencyBrake, boolean preEmergency, int condition) {
         BrakeState prev = states.get(vin);
+        Instant now = Instant.now();
 
         // hold until vehicles are safely separated
         if (prev != null && prev.emergencyBrakeActive && !emergencyBrake && dist < resumeDistanceM) {
@@ -107,7 +108,7 @@ public class BrakeService {
             return;
         }
 
-        BrakeState next = new BrakeState(vin, emergencyBrake, preEmergency, condition, Instant.now());
+        BrakeState next = new BrakeState(vin, emergencyBrake, preEmergency, condition, now);
         states.put(vin, next);
 
         if (emergencyBrake) {
@@ -120,8 +121,8 @@ public class BrakeService {
 
 
         brakePublisher.publish(
-              new BrakeMessage(vin, emergencyBrake, preEmergency, condition, BrakeMessage.Source.BRAKENOW, Instant.now()));
-        SimulatorBrakeMessage simulatorBrakeMessage = new SimulatorBrakeMessage(vin,emergencyBrake, preEmergency, Instant.now());
+              new BrakeMessage(vin, emergencyBrake, preEmergency, condition, BrakeMessage.Source.BRAKENOW, now));
+        SimulatorBrakeMessage simulatorBrakeMessage = new SimulatorBrakeMessage(vin,emergencyBrake, preEmergency, now);
         simulatorPublisher.publish(simulatorBrakeMessage);
     }
 

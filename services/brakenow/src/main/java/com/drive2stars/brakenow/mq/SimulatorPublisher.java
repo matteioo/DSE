@@ -26,8 +26,8 @@ public class SimulatorPublisher {
                     .withContentType("application/json")
                     .withRoutingKey("brake." + message.vin)
                     .build()));
-    LOG.infof("Published BrakeMessage to SIMULATOR: vin=%s active=%b preBreak=%b",
-            message.vin, message.brakeActive, message.preBreak);
+    LOG.infof("Published BrakeMessage to SIMULATOR: vin=%s active=%b preBrake=%b",
+            message.vin, message.brakeActive, message.preBrake);
   }
 
 }

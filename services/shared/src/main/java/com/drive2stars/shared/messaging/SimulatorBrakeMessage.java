@@ -9,16 +9,16 @@ public class SimulatorBrakeMessage {
 
   public String vin;
   public boolean brakeActive;
-  public boolean preBreak;
+  public boolean preBrake;
   public Instant timestamp;
 
   public SimulatorBrakeMessage() {
   }
 
-  public SimulatorBrakeMessage(String vin, boolean brakeActive, boolean preBreak, Instant timestamp) {
+  public SimulatorBrakeMessage(String vin, boolean brakeActive, boolean preBrake, Instant timestamp) {
     this.vin = vin;
     this.brakeActive = brakeActive;
-    this.preBreak = preBreak;
+    this.preBrake = preBrake;
     this.timestamp = timestamp;
   }
 
