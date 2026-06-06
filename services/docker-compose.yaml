@@ -7,6 +7,9 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+      - "15674:15674"
+    volumes:
+      - ./docker/rabbitmq-enabled-plugins:/etc/rabbitmq/enabled_plugins:ro
     healthcheck:
       test: rabbitmq-diagnostics -q ping
       interval: 10s
@@ -119,12 +122,14 @@ services:
         SERVICE: sonar
     ports:
       - "8084:8080"
+      - "9003:9003"
     environment:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       SONAR_MODE: backend
       SONAR_BACKEND_DISTANCE_CONSUMER_ENABLED: "true"
       SONAR_BACKEND_DISTANCE_QUEUE_NAME: sonar.distance.backend
+      GRPC_PORT: 9003
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -144,11 +149,15 @@ services:
       ORCHESTRATOR_GRPC_PORT: 9001
       UTRACKED_GRPC_HOST: utracked
       UTRACKED_GRPC_PORT: 9002
+      SONAR_GRPC_HOST: sonar-backend
+      SONAR_GRPC_PORT: 9003
     depends_on:
       orchestrator:
         condition: service_healthy
       utracked:
         condition: service_healthy
+      sonar-backend:
+        condition: service_started
     profiles: [app]
 
   utracked:
