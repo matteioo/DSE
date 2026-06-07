@@ -1,0 +1,20 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: d2s-ingress
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: "d2s-static-ip"
+    networking.gke.io/managed-certificates: "d2s-cert"
+    kubernetes.io/ingress.allow-http: "true"
+spec:
+  rules:
+    - host: example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: storefront
+                port:
+                  number: 80
