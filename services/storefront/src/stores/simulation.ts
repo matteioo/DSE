@@ -25,14 +25,10 @@ export const useSimulationStore = defineStore('simulation', () => {
         spiderApi.getEvents(),
       ])
 
-      const details = await Promise.all(
-        vehicleList.map((v) => spiderApi.getVehicle(v.vin)),
-      )
-
       vehicles.value = vehicleList
       events.value = evts
       vehicleDetails.value = Object.fromEntries(
-        vehicleList.map((v, i) => [v.vin, details[i]]),
+        vehicleList.map((v) => [v.vin, v]),
       )
 
       error.value = null

@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import SimulationView from '../views/SimulationView.vue'
-import AboutView from '../views/AboutView.vue'
+import ScenarioView from '../views/ScenarioView.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -10,9 +10,9 @@ const router = createRouter({
       component: SimulationView,
     },
     {
-      path: '/about',
-      name: 'about',
-      component: AboutView,
+      path: '/scenario',
+      name: 'scenario',
+      component: ScenarioView,
     },
   ],
 })

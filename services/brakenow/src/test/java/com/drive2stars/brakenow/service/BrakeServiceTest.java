@@ -3,6 +3,7 @@ package com.drive2stars.brakenow.service;
 import com.drive2stars.brakenow.mq.BrakePublisher;
 import com.drive2stars.brakenow.mq.SimulatorPublisher;
 import com.drive2stars.shared.messaging.BrakeMessage;
+import com.drive2stars.shared.messaging.DistanceMessage;
 import com.drive2stars.shared.messaging.SimulatorBrakeMessage;
 import java.time.Instant;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,7 +37,7 @@ class BrakeServiceTest {
 
     @Test
     void normalStateWhenDistanceLarge() {
-        service.processDistance("VIN-1", 100.0, 2.0);
+        service.processDistance("VIN-1", 100.0, 2.0, DistanceMessage.Direction.FRONT);
 
         BrakeMessage msg = captureBreakMessage();
         assertFalse(msg.active);
@@ -46,7 +47,7 @@ class BrakeServiceTest {
 
     @Test
     void preEmergencyOnlyWhenDistanceBelow45() {
-        service.processDistance("VIN-1", 40.0, 1.0);
+        service.processDistance("VIN-1", 40.0, 1.0, DistanceMessage.Direction.FRONT);
 
         BrakeMessage msg = captureBreakMessage();
         assertFalse(msg.active);
@@ -59,62 +60,66 @@ class BrakeServiceTest {
     }
 
     @Test
-    void condition1TriggeredAtThreshold() {
-        service.processDistance("VIN-1", 25.0, 5.0);
+    void condition1TriggersBrakeAndPreEmergency() {
+        service.processDistance("VIN-1", 25.0, 5.0, DistanceMessage.Direction.FRONT);
 
         BrakeMessage msg = captureBreakMessage();
         assertTrue(msg.active);
+        assertTrue(msg.preEmergencyBrake);
         assertEquals(1, msg.conditionTriggered);
     }
 
     @Test
     void condition1NotTriggeredWhenRateTooLow() {
-        service.processDistance("VIN-1", 25.0, 3.9);
+        service.processDistance("VIN-1", 25.0, 3.9, DistanceMessage.Direction.FRONT);
 
         BrakeMessage msg = captureBreakMessage();
         assertFalse(msg.active);
     }
 
     @Test
-    void condition2TriggeredAtThreshold() {
-        service.processDistance("VIN-1", 10.0, 2.5);
+    void condition2TriggersBrakeAndPreEmergency() {
+        service.processDistance("VIN-1", 10.0, 2.5, DistanceMessage.Direction.FRONT);
 
         BrakeMessage msg = captureBreakMessage();
         assertTrue(msg.active);
+        assertTrue(msg.preEmergencyBrake);
         assertEquals(2, msg.conditionTriggered);
     }
 
     @Test
     void condition2NotTriggeredWhenRateTooLow() {
-        service.processDistance("VIN-1", 10.0, 1.9);
+        service.processDistance("VIN-1", 10.0, 1.9, DistanceMessage.Direction.FRONT);
 
         BrakeMessage msg = captureBreakMessage();
         assertFalse(msg.active);
     }
 
     @Test
-    void condition3TriggeredWhenVeryCloseAndApproaching() {
-        service.processDistance("VIN-1", 3.0, 0.1);
+    void condition3TriggersBrakeAndPreEmergency() {
+        service.processDistance("VIN-1", 3.0, 0.1, DistanceMessage.Direction.FRONT);
 
         BrakeMessage msg = captureBreakMessage();
         assertTrue(msg.active);
+        assertTrue(msg.preEmergencyBrake);
         assertEquals(3, msg.conditionTriggered);
     }
 
     @Test
     void condition3NotTriggeredWhenReceding() {
-        service.processDistance("VIN-1", 3.0, -0.5);
+        service.processDistance("VIN-1", 3.0, -0.5, DistanceMessage.Direction.FRONT);
 
         BrakeMessage msg = captureBreakMessage();
         assertFalse(msg.active);
     }
 
     @Test
-    void mostSevereConditionSelectedWhenMultipleApply() {
-        // dist=3m qualifies for condition 3 even though also within condition 2 range
-        service.processDistance("VIN-1", 3.0, 3.0);
+    void condition3TriggersBrakeAtHighClosingRate() {
+        service.processDistance("VIN-1", 3.0, 3.0, DistanceMessage.Direction.FRONT);
 
         BrakeMessage msg = captureBreakMessage();
+        assertTrue(msg.active);
+        assertTrue(msg.preEmergencyBrake);
         assertEquals(3, msg.conditionTriggered);
     }
 
@@ -122,10 +127,10 @@ class BrakeServiceTest {
 
     @Test
     void preEmergencyExitsWhenDistanceReaches45() {
-        service.processDistance("VIN-1", 40.0, 0.0);
+        service.processDistance("VIN-1", 40.0, 0.0, DistanceMessage.Direction.FRONT);
         reset(brakePublisher, simulatorPublisher);
 
-        service.processDistance("VIN-1", 45.0, 0.0);
+        service.processDistance("VIN-1", 45.0, 0.0, DistanceMessage.Direction.FRONT);
 
         BrakeMessage msg = captureBreakMessage();
         assertFalse(msg.preEmergencyBrake);
@@ -133,50 +138,86 @@ class BrakeServiceTest {
     }
 
     @Test
-    void sameStateNotPublishedTwice() {
-        service.processDistance("VIN-1", 100.0, 0.0);
-        service.processDistance("VIN-1", 100.0, 0.0);
+    void publishedForEveryFrontReading() {
+        service.processDistance("VIN-1", 100.0, 0.0, DistanceMessage.Direction.FRONT);
+        service.processDistance("VIN-1", 100.0, 0.0, DistanceMessage.Direction.FRONT);
 
-        verify(brakePublisher, times(1)).publish(any());
+        verify(brakePublisher, times(2)).publish(any());
+    }
+
+    @Test
+    void backSensorReadingNotPublished() {
+        service.processDistance("VIN-1", 100.0, 0.0, DistanceMessage.Direction.BACK);
+
+        verifyNoInteractions(brakePublisher, simulatorPublisher);
     }
 
     @Test
     void publishedAgainWhenStateChanges() {
-        service.processDistance("VIN-1", 100.0, 0.0);
-        service.processDistance("VIN-1", 40.0, 0.0);  // pre-emergency
+        service.processDistance("VIN-1", 100.0, 0.0, DistanceMessage.Direction.FRONT);
+        service.processDistance("VIN-1", 40.0, 0.0, DistanceMessage.Direction.FRONT);  // pre-emergency
 
         verify(brakePublisher, times(2)).publish(any());
     }
 
     @Test
     void publishedMessageHasBrakeNowSource() {
-        service.processDistance("VIN-1", 3.0, 1.0);
+        service.processDistance("VIN-1", 3.0, 1.0, DistanceMessage.Direction.FRONT);
 
         BrakeMessage msg = captureBreakMessage();
         assertEquals(BrakeMessage.Source.BRAKENOW, msg.source);
     }
 
-    // Hold logic for brake
     @Test
-    void emergencyBrakeHeldWhileDistanceBelowResumeThreshold() {
-        service.processDistance("VIN-1", 3.0, 1.0); // emergency brake
+    void preEmergencyPublishedForBackSensorWhenClose() {
+        service.processDistance("VIN-1", 40.0, 1.0, DistanceMessage.Direction.BACK);
+
+        BrakeMessage msg = captureBreakMessage();
+        assertFalse(msg.active);
+        assertTrue(msg.preEmergencyBrake);
+    }
+
+    @Test
+    void backPreEmergencyClearedWhenDistanceExceeds45() {
+        service.processDistance("VIN-1", 40.0, 1.0, DistanceMessage.Direction.BACK);
         reset(brakePublisher, simulatorPublisher);
 
-        service.processDistance("VIN-1", 100.0, -1.0);
+        service.processDistance("VIN-1", 45.0, 0.0, DistanceMessage.Direction.BACK);
 
-       BrakeMessage msg = captureBreakMessage();
-       assertTrue(msg.active);
+        BrakeMessage msg = captureBreakMessage();
+        assertFalse(msg.active);
+        assertFalse(msg.preEmergencyBrake);
+    }
 
-       SimulatorBrakeMessage sim = captureSimulatorMessage();
-      assertTrue(sim.brakeActive);
+    @Test
+    void backNormalDistanceNotRepublishedAfterClearing() {
+        service.processDistance("VIN-1", 40.0, 1.0, DistanceMessage.Direction.BACK);
+        service.processDistance("VIN-1", 50.0, 0.0, DistanceMessage.Direction.BACK);
+        reset(brakePublisher, simulatorPublisher);
+
+        service.processDistance("VIN-1", 100.0, 0.0, DistanceMessage.Direction.BACK);
+
+        verifyNoInteractions(brakePublisher, simulatorPublisher);
+    }
+
+    @Test
+    void normalDistanceOnFrontAfterPreEmergency() {
+        service.processDistance("VIN-1", 40.0, 1.0, DistanceMessage.Direction.FRONT);
+        reset(brakePublisher, simulatorPublisher);
+
+        service.processDistance("VIN-1", 100.0, -1.0, DistanceMessage.Direction.FRONT);
+
+        BrakeMessage msg = captureBreakMessage();
+        assertFalse(msg.active);
+        assertFalse(msg.preEmergencyBrake);
     }
 
     @Test
     void emergencyBrakeReleasedWhenDistanceExceedsResumeThreshold() {
-        service.processDistance("VIN-1", 3.0, 1.0); // emergency brake
+        service.processDistance("VIN-1", 3.0, 1.0, DistanceMessage.Direction.FRONT);
         reset(brakePublisher, simulatorPublisher);
 
-        service.processDistance("VIN-1", 155.0, -1.0);  // > 150m safe to resume
+        service.processDistance("VIN-1", 155.0, -1.0, DistanceMessage.Direction.FRONT);
 
         BrakeMessage msg = captureBreakMessage();
         assertFalse(msg.active);
@@ -186,24 +227,40 @@ class BrakeServiceTest {
     }
 
     @Test
-    void holdDoesNotBlockSecondEmergencyBrakeAfterFullCycle() {
-        service.processDistance("VIN-1", 3.0, 1.0);  // 1st emergency
-        service.processDistance("VIN-1", 155.0, -1.0); // resume
+    void preEmergencyFiredOnSecondApproachAfterFullCycle() {
+        service.processDistance("VIN-1", 40.0, 1.0, DistanceMessage.Direction.FRONT);
+        service.processDistance("VIN-1", 3.0, 1.0, DistanceMessage.Direction.FRONT);
+        service.processDistance("VIN-1", 155.0, -1.0, DistanceMessage.Direction.FRONT);
         reset(brakePublisher, simulatorPublisher);
 
-        service.processDistance("VIN-1", 3.0, 1.0); // 2nd emergency
+        service.processDistance("VIN-1", 40.0, 1.0, DistanceMessage.Direction.FRONT);
+
+        BrakeMessage msg = captureBreakMessage();
+        assertFalse(msg.active);
+        assertTrue(msg.preEmergencyBrake);
+    }
+
+    @Test
+    void emergencyBrakeRefiredAfterNormalState() {
+        service.processDistance("VIN-1", 3.0, 1.0, DistanceMessage.Direction.FRONT);
+        service.processDistance("VIN-1", 155.0, -1.0, DistanceMessage.Direction.FRONT);
+        reset(brakePublisher, simulatorPublisher);
+
+        service.processDistance("VIN-1", 3.0, 1.0, DistanceMessage.Direction.FRONT);
 
         BrakeMessage msg = captureBreakMessage();
         assertTrue(msg.active);
+        assertTrue(msg.preEmergencyBrake);
+        assertEquals(3, msg.conditionTriggered);
     }
 
     @Test
     void resetStateBypassesHoldOnNextReading() {
-        service.processDistance("VIN-1", 3.0, 1.0); // emergency brake
+        service.processDistance("VIN-1", 3.0, 1.0, DistanceMessage.Direction.FRONT);
         service.resetState();
         reset(brakePublisher, simulatorPublisher);
 
-        service.processDistance("VIN-1", 80.0, 1.38);  // normal distance after reset
+        service.processDistance("VIN-1", 80.0, 1.38, DistanceMessage.Direction.FRONT);
 
         BrakeMessage msg = captureBreakMessage();
         assertFalse(msg.active);
@@ -212,7 +269,7 @@ class BrakeServiceTest {
 
     @Test
     void resetStateClearsGetState() {
-        service.processDistance("VIN-1", 3.0, 1.0);
+        service.processDistance("VIN-1", 3.0, 1.0, DistanceMessage.Direction.FRONT);
         assertNotNull(service.getState("VIN-1"));
 
         service.resetState();
@@ -223,7 +280,7 @@ class BrakeServiceTest {
 
     @Test
     void processBrakeForwardsActiveToSimulator() {
-        service.processBrake("VIN-1", true, Instant.now());
+        service.processBrake("VIN-1", true, 4, Instant.now());
 
         SimulatorBrakeMessage sim = captureSimulatorMessage();
         assertTrue(sim.brakeActive);
@@ -233,7 +290,7 @@ class BrakeServiceTest {
 
     @Test
     void processBrakeForwardsClearToSimulator() {
-        service.processBrake("VIN-1", false, Instant.now());
+        service.processBrake("VIN-1", false, 4, Instant.now());
 
         SimulatorBrakeMessage sim = captureSimulatorMessage();
         assertFalse(sim.brakeActive);
@@ -241,10 +298,13 @@ class BrakeServiceTest {
     }
 
     @Test
-    void processBrakeDoesNotUpdateInternalState() {
-        service.processBrake("VIN-1", true, Instant.now());
+    void processBrakeUpdatesInternalState() {
+        service.processBrake("VIN-1", true, 4, Instant.now());
 
-        assertNull(service.getState("VIN-1"));
+        BrakeState state = service.getState("VIN-1");
+        assertNotNull(state);
+        assertTrue(state.emergencyBrakeActive);
+        assertEquals(4, state.conditionTriggered);
         verifyNoInteractions(brakePublisher);
     }
 
