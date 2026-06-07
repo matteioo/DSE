@@ -1,0 +1,22 @@
+syntax = "proto3";
+package com.drive2stars.grpc;
+option java_multiple_files = true;
+option java_package = "com.drive2stars.grpc.sonar";
+
+service SonarService {
+  rpc GetLatestReadings (GetLatestReadingsRequest) returns (GetLatestReadingsResponse);
+}
+
+message GetLatestReadingsRequest {}
+
+message GetLatestReadingsResponse {
+  repeated SonarReading readings = 1;
+}
+
+message SonarReading {
+  string vin = 1;
+  string direction = 2;
+  double distance_meters = 3;
+  double distance_change_mps = 4;
+  string measured_at = 5;
+}
