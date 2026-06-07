@@ -43,7 +43,7 @@ echo "==> Restarting all pods to pick up new images..."
 kubectl delete pods -l app!=postgres
 
 echo "==> Waiting for all pods to be Ready..."
-kubectl wait pod --for=condition=Ready --all --timeout=300s
+kubectl wait pod --for=condition=Ready --all --timeout=480s
 
 echo "==> Done. Current pod status:"
 kubectl get pods
