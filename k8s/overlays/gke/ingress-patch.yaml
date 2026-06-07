@@ -4,7 +4,7 @@ metadata:
   name: d2s-ingress
   annotations:
     kubernetes.io/ingress.global-static-ip-name: "d2s-static-ip"
-    networking.gke.io/managed-certificates: "d2s-cert"
+    networking.gke.io/managed-certificates: "d2s-cert-v2"
     kubernetes.io/ingress.allow-http: "true"
 spec:
   rules:

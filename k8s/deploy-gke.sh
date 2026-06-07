@@ -32,13 +32,6 @@ echo "==> Building and pushing all images to GCR..."
 echo "==> All images pushed."
 
 echo "==> Applying Kubernetes manifests..."
-# Wait for any in-progress ingress deletion to complete before applying,
-# otherwise GKE's ingress controller races and the new ingress may not be created.
-if kubectl get ingress d2s-ingress &>/dev/null; then
-  echo "  Waiting for existing ingress deletion to settle..."
-  kubectl wait --for=delete ingress/d2s-ingress --timeout=60s 2>/dev/null || true
-fi
-
 kubectl kustomize "$SCRIPT_DIR/overlays/gke" \
   | sed "s|gcr.io/PROJECT_ID|$REGISTRY|g" \
   | kubectl apply --server-side --force-conflicts -f -
@@ -49,26 +42,23 @@ kubectl kustomize "$SCRIPT_DIR/overlays/gke" \
 echo "==> Restarting all pods to pick up new images..."
 kubectl delete pods -l app!=postgres
 
-echo "==> Waiting for infrastructure..."
-kubectl rollout status deployment/rabbitmq --timeout=240s
-kubectl rollout status statefulset/postgres --timeout=120s
-
-echo "==> Waiting for backend services..."
-kubectl rollout status deployment/utracked --timeout=240s
-kubectl rollout status deployment/orchestrator --timeout=240s
-kubectl rollout status deployment/sonar-backend --timeout=180s
-kubectl rollout status deployment/spider --timeout=180s
-kubectl rollout status deployment/storefront --timeout=180s
-
-echo "==> Waiting for vehicle services..."
-kubectl rollout status deployment/vehicle-1-whereami --timeout=180s
-kubectl rollout status deployment/vehicle-1-sonar --timeout=180s
-kubectl rollout status deployment/vehicle-1-brakenow --timeout=180s
-kubectl rollout status deployment/vehicle-1-simulator --timeout=180s
-kubectl rollout status deployment/vehicle-2-whereami --timeout=180s
-kubectl rollout status deployment/vehicle-2-sonar --timeout=180s
-kubectl rollout status deployment/vehicle-2-brakenow --timeout=180s
-kubectl rollout status deployment/vehicle-2-simulator --timeout=180s
+echo "==> Waiting for all services to be ready..."
+kubectl rollout status deployment/rabbitmq         --timeout=240s &
+kubectl rollout status statefulset/postgres        --timeout=120s &
+kubectl rollout status deployment/utracked         --timeout=240s &
+kubectl rollout status deployment/orchestrator     --timeout=240s &
+kubectl rollout status deployment/sonar-backend    --timeout=180s &
+kubectl rollout status deployment/spider           --timeout=180s &
+kubectl rollout status deployment/storefront       --timeout=180s &
+kubectl rollout status deployment/vehicle-1-whereami  --timeout=180s &
+kubectl rollout status deployment/vehicle-1-sonar     --timeout=180s &
+kubectl rollout status deployment/vehicle-1-brakenow  --timeout=180s &
+kubectl rollout status deployment/vehicle-1-simulator --timeout=180s &
+kubectl rollout status deployment/vehicle-2-whereami  --timeout=180s &
+kubectl rollout status deployment/vehicle-2-sonar     --timeout=180s &
+kubectl rollout status deployment/vehicle-2-brakenow  --timeout=180s &
+kubectl rollout status deployment/vehicle-2-simulator --timeout=180s &
+wait
 
 echo "==> Done. Current pod status:"
 kubectl get pods
