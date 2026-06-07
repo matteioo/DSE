@@ -315,21 +315,132 @@ kubectl describe managedcertificate d2s-cert-v2
 
 ```bash
 kubectl get pods                          # all pod statuses
+kubectl get pods -w                       # watch live
+kubectl get all                           # pods + services + deployments at once
 kubectl logs deployment/spider            # service logs
 kubectl logs deployment/vehicle-1-sonar   # vehicle service logs
+kubectl logs deployment/spider -f         # follow live
 kubectl port-forward deployment/rabbitmq 15672:15672  # RabbitMQ UI → localhost:15672
+```
+
+### TLS certificate
+
+The GKE managed certificate takes 10–20 min to provision after DNS points to the static IP.
+
+```bash
+kubectl describe managedcertificate d2s-cert-v2   # check provisioning status
+```
+
+Status cycles through: `Provisioning` → `Active`. If it stays on `Provisioning`, the DNS
+record for `sudern.lol` has not propagated yet or the static IP annotation on the ingress
+is wrong. HTTP (`http://sudern.lol`) works immediately; HTTPS only after `Active`.
+
+### Ingress & static IP
+
+```bash
+kubectl get ingress                        # shows ADDRESS once the LB is provisioned
+kubectl describe ingress d2s-ingress       # events + backend health
+gcloud compute addresses describe d2s-static-ip --global   # confirm the reserved IP
 ```
 
 ### Tear down
 
-**Remove all resources** (keeps the cluster running, avoids GKE costs from idle pods):
+**Remove all resources** (keeps the cluster nodes running, redeploy in ~5 min):
 ```bash
 kubectl delete -k k8s/overlays/gke
 ```
 
-**Delete the cluster entirely:**
+**Delete the cluster entirely** (stops VM charges, between submission and interview):
 ```bash
+kubectl delete -k k8s/overlays/gke          # remove resources first (optional but clean)
 gcloud container clusters delete d2s-cluster --zone europe-west1-b
 ```
 
-> Tear down the cluster when not actively using it — a 3-node cluster costs ~$150/month.
+> Keep the static IP (`d2s-static-ip`) and GCR images — both survive cluster deletion and
+> cost almost nothing. Deleting the static IP would break the DNS record for `sudern.lol`.
+
+### Recreate the cluster (e.g. before the interview)
+
+```bash
+# 1. Create the cluster
+gcloud container clusters create d2s-cluster \
+  --zone europe-west1-b \
+  --num-nodes 3 \
+  --machine-type e2-standard-2
+
+# 2. Point kubectl at it
+gcloud container clusters get-credentials d2s-cluster --zone europe-west1-b
+
+# 3. Deploy everything (images are already in GCR, static IP is already reserved)
+export GCP_PROJECT=dse26-group-11
+./k8s/deploy-gke.sh
+```
+
+The managed TLS certificate re-provisions automatically. Since the DNS record for
+`sudern.lol` already points to the static IP, it typically goes `Active` within a few
+minutes on a second provision. HTTP works immediately; HTTPS once the cert is `Active`.
+
+> Do a full dry run the day before the interview to confirm the deploy completes cleanly.
+
+---
+
+### Troubleshooting during the interview
+
+**Pod stuck in CrashLoopBackOff or not starting:**
+```bash
+kubectl describe pod <pod-name>           # events section shows the root cause
+kubectl logs <pod-name> --previous        # logs from the crashed container
+```
+
+**Pod stuck in Pending:**
+```bash
+kubectl describe pod <pod-name>           # look for "Insufficient memory/cpu" or image pull errors
+kubectl get events --sort-by=.lastTimestamp   # cluster-wide event log, newest last
+```
+
+**Image pull error (ErrImagePull / ImagePullBackOff):**
+```bash
+# Re-authenticate Docker and re-push
+gcloud auth configure-docker gcr.io
+docker push gcr.io/$GCP_PROJECT/<service>:latest
+kubectl rollout restart deployment/<service>
+```
+
+**Service is Running but not responding:**
+```bash
+kubectl port-forward deployment/spider 8085:8080
+# then curl http://localhost:8085/q/health/ready
+```
+
+**RabbitMQ not accepting connections:**
+```bash
+kubectl port-forward deployment/rabbitmq 15672:15672
+# open http://localhost:15672 (dse/dse) — check exchanges and queues exist
+```
+
+**Restart a single service** without redeploying everything:
+```bash
+kubectl rollout restart deployment/orchestrator
+kubectl rollout restart deployment/vehicle-1-simulator
+```
+
+**Re-deploy a single service** after rebuilding its image:
+```bash
+# From repo root:
+export GCP_PROJECT=dse26-group-11
+docker buildx bake spider --push
+kubectl rollout restart deployment/spider
+kubectl rollout status deployment/spider
+```
+
+**Wipe and redeploy everything from scratch** (nuclear option):
+```bash
+kubectl delete -k k8s/overlays/gke
+./k8s/deploy-gke.sh
+```
+
+**Check resource usage** (requires metrics-server, enabled by default on GKE):
+```bash
+kubectl top pods
+kubectl top nodes
+```

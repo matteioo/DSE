@@ -36,29 +36,14 @@ kubectl kustomize "$SCRIPT_DIR/overlays/gke" \
   | sed "s|gcr.io/PROJECT_ID|$REGISTRY|g" \
   | kubectl apply --server-side --force-conflicts -f -
 
-# Force pod restarts so GKE pulls the updated :latest images.
-# Deletes all Deployment pods simultaneously; K8s recreates them and pulls fresh images.
-# Leave postgres StatefulSet pods alone — pinned upstream image, no re-pull needed.
+# Delete all non-postgres pods so GKE recreates them and pulls fresh images.
+# imagePullPolicy: Always (set in the GKE overlay) ensures each new pod fetches
+# the image we just pushed rather than a node-cached layer.
 echo "==> Restarting all pods to pick up new images..."
 kubectl delete pods -l app!=postgres
 
-echo "==> Waiting for all services to be ready..."
-kubectl rollout status deployment/rabbitmq         --timeout=240s &
-kubectl rollout status statefulset/postgres        --timeout=120s &
-kubectl rollout status deployment/utracked         --timeout=240s &
-kubectl rollout status deployment/orchestrator     --timeout=240s &
-kubectl rollout status deployment/sonar-backend    --timeout=180s &
-kubectl rollout status deployment/spider           --timeout=180s &
-kubectl rollout status deployment/storefront       --timeout=180s &
-kubectl rollout status deployment/vehicle-1-whereami  --timeout=180s &
-kubectl rollout status deployment/vehicle-1-sonar     --timeout=180s &
-kubectl rollout status deployment/vehicle-1-brakenow  --timeout=180s &
-kubectl rollout status deployment/vehicle-1-simulator --timeout=180s &
-kubectl rollout status deployment/vehicle-2-whereami  --timeout=180s &
-kubectl rollout status deployment/vehicle-2-sonar     --timeout=180s &
-kubectl rollout status deployment/vehicle-2-brakenow  --timeout=180s &
-kubectl rollout status deployment/vehicle-2-simulator --timeout=180s &
-wait
+echo "==> Waiting for all pods to be Ready..."
+kubectl wait pod --for=condition=Ready --all --timeout=300s
 
 echo "==> Done. Current pod status:"
 kubectl get pods
