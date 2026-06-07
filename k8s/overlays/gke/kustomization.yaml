@@ -3,6 +3,13 @@ kind: Kustomization
 
 resources:
   - ../../base
+  - managed-cert.yaml
+
+patches:
+  - path: ingress-patch.yaml
+    target:
+      kind: Ingress
+      name: d2s-ingress
 
 # Rewrite local image names to GCR paths.
 # deploy-gke.sh substitutes PROJECT_ID at apply time.

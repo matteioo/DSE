@@ -54,30 +54,39 @@ kubectl rollout status deployment/rabbitmq --timeout=240s
 kubectl rollout status statefulset/postgres --timeout=120s
 
 echo "==> Waiting for backend services..."
-kubectl rollout status deployment/orchestrator --timeout=240s
 kubectl rollout status deployment/utracked --timeout=240s
+kubectl rollout status deployment/orchestrator --timeout=240s
+kubectl rollout status deployment/sonar-backend --timeout=180s
 kubectl rollout status deployment/spider --timeout=180s
 kubectl rollout status deployment/storefront --timeout=180s
+
+echo "==> Waiting for vehicle services..."
+kubectl rollout status deployment/vehicle-1-whereami --timeout=180s
+kubectl rollout status deployment/vehicle-1-sonar --timeout=180s
+kubectl rollout status deployment/vehicle-1-brakenow --timeout=180s
+kubectl rollout status deployment/vehicle-1-simulator --timeout=180s
+kubectl rollout status deployment/vehicle-2-whereami --timeout=180s
+kubectl rollout status deployment/vehicle-2-sonar --timeout=180s
+kubectl rollout status deployment/vehicle-2-brakenow --timeout=180s
+kubectl rollout status deployment/vehicle-2-simulator --timeout=180s
 
 echo "==> Done. Current pod status:"
 kubectl get pods
 echo ""
 
-IP=""
-echo "==> Waiting for ingress external IP (GKE load balancer provisioning takes 2-5 min)..."
-for i in $(seq 1 24); do
-  IP=$(kubectl get ingress d2s-ingress -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
-  if [ -n "$IP" ]; then
-    echo ""
-    echo "==> Frontend available at: http://$IP"
-    break
-  fi
-  printf "  Still provisioning... (%d/24, ~%ds elapsed)\r" "$i" "$((i * 15))"
-  sleep 15
-done
-
-if [ -z "$IP" ]; then
-  echo ""
-  echo "  Load balancer IP not yet assigned. Check later with:"
-  echo "  kubectl get ingress d2s-ingress"
+echo "==> Checking for unhealthy pods..."
+UNHEALTHY=$(kubectl get pods --no-headers | grep -v "Running\|Completed" || true)
+if [ -n "$UNHEALTHY" ]; then
+  echo "ERROR: Some pods are not healthy:"
+  echo "$UNHEALTHY"
+  exit 1
 fi
+echo "  All pods are Running."
+
+STATIC_IP=$(gcloud compute addresses describe d2s-static-ip --global --format="get(address)" 2>/dev/null || true)
+echo ""
+if [ -n "$STATIC_IP" ]; then
+  echo "==> Static IP  : $STATIC_IP"
+fi
+echo "==> Frontend   : https://sudern.lol"
+echo "    (HTTPS cert provisioning takes 10-20 min after DNS propagates)"
