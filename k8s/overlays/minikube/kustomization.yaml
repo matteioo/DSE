@@ -5,9 +5,25 @@ resources:
   - ../../base
 
 patches:
+  # Images are loaded into Minikube's internal registry via `minikube image load`,
+  # so Kubernetes must not try to pull them from a remote registry.
   - patch: |-
       - op: add
         path: /spec/template/spec/containers/0/imagePullPolicy
         value: Never
     target:
       kind: Deployment
+
+  # ingress-nginx < 1.0 requires the annotation; >= 1.0 uses ingressClassName.
+  # Both are set here so the overlay works regardless of which Minikube version
+  # the operator is running.
+  - patch: |-
+      - op: add
+        path: /metadata/annotations
+        value:
+          kubernetes.io/ingress.class: "nginx"
+      - op: add
+        path: /spec/ingressClassName
+        value: nginx
+    target:
+      kind: Ingress

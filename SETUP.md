@@ -247,10 +247,89 @@ k8s/
 │   ├── vehicle-1/           # namePrefix: vehicle-1-, VIN-001 patches
 │   └── vehicle-2/           # namePrefix: vehicle-2-, VIN-002 patches
 └── overlays/
-    └── minikube/            # imagePullPolicy: Never patch
+    ├── minikube/            # imagePullPolicy: Never + nginx ingress class
+    └── gke/                 # GCR image rewrites + GKE ingress annotations + managed cert
 ```
 
 Render the full manifest without applying (useful for debugging):
 ```bash
 kubectl kustomize k8s/overlays/minikube
+kubectl kustomize k8s/overlays/gke | sed "s|gcr.io/PROJECT_ID|gcr.io/$GCP_PROJECT|g"
 ```
+
+---
+
+## Kubernetes (GKE)
+
+### Prerequisites
+
+1. A GCP project with billing enabled and GKE API active
+2. `gcloud` CLI authenticated: `gcloud auth login && gcloud auth application-default login`
+3. A GKE Standard cluster (not Autopilot) named `YOUR_CLUSTER` in `europe-west1-b`:
+   ```bash
+   gcloud container clusters create YOUR_CLUSTER \
+     --zone europe-west1-b \
+     --num-nodes 3 \
+     --machine-type e2-standard-2
+   ```
+4. A static global IP reserved:
+   ```bash
+   gcloud compute addresses create d2s-static-ip --global
+   ```
+5. `kubectl` context pointed at the cluster:
+   ```bash
+   gcloud container clusters get-credentials YOUR_CLUSTER --zone europe-west1-b
+   ```
+
+### Deploy everything
+
+```bash
+export GCP_PROJECT=your-gcp-project-id
+./k8s/deploy-gke.sh
+```
+
+This will:
+1. Authenticate Docker with GCR
+2. Build and push all images to `gcr.io/$GCP_PROJECT/<service>:latest` (parallel via `docker buildx bake --push`)
+3. Apply all manifests via Kustomize (with GCR image rewrites and GKE ingress annotations)
+4. Restart all pods so GKE pulls the freshly pushed images
+5. Wait for all Deployments and the StatefulSet to be ready in parallel
+6. Print the static IP and frontend URL
+
+### Access the frontend
+
+```
+https://example.com
+```
+
+The GKE ingress uses a Google-managed TLS certificate (`d2s-cert-v2`). Certificate provisioning
+takes **10–20 minutes** after the DNS record for `example.com` points to the static IP.
+HTTP is also allowed (`kubernetes.io/ingress.allow-http: "true"`) during that window.
+
+Check certificate status:
+```bash
+kubectl describe managedcertificate d2s-cert-v2
+```
+
+### Inspect the cluster
+
+```bash
+kubectl get pods                          # all pod statuses
+kubectl logs deployment/spider            # service logs
+kubectl logs deployment/vehicle-1-sonar   # vehicle service logs
+kubectl port-forward deployment/rabbitmq 15672:15672  # RabbitMQ UI → localhost:15672
+```
+
+### Tear down
+
+**Remove all resources** (keeps the cluster running, avoids GKE costs from idle pods):
+```bash
+kubectl delete -k k8s/overlays/gke
+```
+
+**Delete the cluster entirely:**
+```bash
+gcloud container clusters delete YOUR_CLUSTER --zone europe-west1-b
+```
+
+> Tear down the cluster when not actively using it — a 3-node cluster costs ~$150/month.
