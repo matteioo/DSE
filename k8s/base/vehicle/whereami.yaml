@@ -34,7 +34,7 @@ spec:
             - name: SIMULATOR_BASE_URL
               value: http://simulator-vehicle-0:8080
             - name: WHEREAMI_POLL_INTERVAL
-              value: 1s
+              value: 500ms
           livenessProbe:
             httpGet:
               path: /q/health/live

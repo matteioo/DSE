@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 set -e
 
+CURRENT_CONTEXT=$(kubectl config current-context 2>/dev/null || true)
+if [[ "$CURRENT_CONTEXT" != "minikube" ]]; then
+  echo "Error: kubectl context is '$CURRENT_CONTEXT' — refusing to run Minikube deploy."
+  echo "  Switch with: kubectl config use-context minikube"
+  exit 1
+fi
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$SCRIPT_DIR/.."
 K8S_DIR="$SCRIPT_DIR"
