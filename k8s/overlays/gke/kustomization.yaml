@@ -1,0 +1,51 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+  - managed-cert.yaml
+
+patches:
+  - path: ingress-patch.yaml
+    target:
+      kind: Ingress
+      name: d2s-ingress
+
+  # Always pull from GCR so a pod restart on any node picks up the latest push,
+  # not a stale layer cached from a previous deploy.
+  - patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Always
+    target:
+      kind: Deployment
+
+# Rewrite local image names to GCR paths.
+# "PROJECT_ID" is a literal placeholder — deploy-gke.sh pipes the kustomize output
+# through `sed "s|gcr.io/PROJECT_ID|gcr.io/$GCP_PROJECT|g"` before kubectl apply,
+# so the actual project ID is never stored in git.
+images:
+  - name: brakenow
+    newName: gcr.io/PROJECT_ID/brakenow
+    newTag: latest
+  - name: orchestrator
+    newName: gcr.io/PROJECT_ID/orchestrator
+    newTag: latest
+  - name: simulator
+    newName: gcr.io/PROJECT_ID/simulator
+    newTag: latest
+  - name: sonar
+    newName: gcr.io/PROJECT_ID/sonar
+    newTag: latest
+  - name: spider
+    newName: gcr.io/PROJECT_ID/spider
+    newTag: latest
+  - name: utracked
+    newName: gcr.io/PROJECT_ID/utracked
+    newTag: latest
+  - name: whereami
+    newName: gcr.io/PROJECT_ID/whereami
+    newTag: latest
+  - name: storefront
+    newName: gcr.io/PROJECT_ID/storefront
+    newTag: latest

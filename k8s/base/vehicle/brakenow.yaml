@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: brakenow
+spec:
+  selector:
+    matchLabels:
+      app: brakenow
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: brakenow
+    spec:
+      containers:
+        - name: brakenow
+          image: "brakenow:latest"
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: RABBITMQ_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: infra-config
+                  key: rmq-url
+            - name: RABBITMQ_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: infra-config
+                  key: rmq-port
+            - name: BRAKENOW_VIN
+              value: D2S-DEMO-VIN-000
+            - name: BRAKENOW_SONAR_QUEUE_NAME
+              value: brakenow.sonar.vehicle-0
+            - name: BRAKENOW_BRAKE_QUEUE_NAME
+              value: brakenow.brake.vehicle-0
+            - name: BRAKENOW_BRAKE_ROUTING_KEY
+              value: brake.D2S-DEMO-VIN-000
+            - name: BRAKENOW_SCENARIO_QUEUE_NAME
+              value: brakenow.scenario.vehicle-0
+          livenessProbe:
+            httpGet:
+              path: /q/health/live
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /q/health/ready
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+          resources:
+            requests:
+              memory: "160Mi"
+              cpu: "100m"
+            limits:
+              memory: "320Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: brakenow
+spec:
+  type: ClusterIP
+  selector:
+    app: brakenow
+  ports:
+    - port: 8080
+      targetPort: 8080
+      name: http

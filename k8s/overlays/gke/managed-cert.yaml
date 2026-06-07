@@ -1,0 +1,7 @@
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: d2s-cert-v2
+spec:
+  domains:
+    - example.com

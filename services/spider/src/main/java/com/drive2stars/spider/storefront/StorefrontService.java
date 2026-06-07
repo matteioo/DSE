@@ -106,13 +106,14 @@ public class StorefrontService {
         boolean positionUnchanged = Math.abs(cached.lat() - pos.latitude) < 1e-7
                                  && Math.abs(cached.lon() - pos.longitude) < 1e-7;
         if (positionUnchanged) {
-            positionCache.put(pos.vin, new CachedPosition(cached.lat(), cached.lon(), now, 0.0));
-            return 0.0;
+            long staleMs = now.toEpochMilli() - cached.seenAt().toEpochMilli();
+            return staleMs >= 2000 ? 0.0 : cached.speedKmh();
         }
 
         long elapsedMs = now.toEpochMilli() - cached.seenAt().toEpochMilli();
         double distanceM = haversineMeters(cached.lat(), cached.lon(), pos.latitude, pos.longitude);
         double speedKmh = elapsedMs > 0 ? (distanceM / (elapsedMs / 1000.0)) * 3.6 : 0.0;
+        if (speedKmh > 200.0 || speedKmh <= 0.5) speedKmh = 0.0;
 
         positionCache.put(pos.vin, new CachedPosition(pos.latitude, pos.longitude, now, speedKmh));
         return speedKmh;
