@@ -9,7 +9,7 @@ import { RouterLink, RouterView } from 'vue-router'
       <span class="brand">Drive2Stars</span>
       <nav>
         <RouterLink to="/">Simulation</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
+        <RouterLink to="/scenario">Scenarios</RouterLink>
       </nav>
     </header>
 

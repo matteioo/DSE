@@ -41,11 +41,11 @@ public class SonarConsumer {
             return;
         }
 
-        if (!ownVin.equals(msg.vin) || msg.direction != DistanceMessage.Direction.FRONT) return;
+        if (!ownVin.equals(msg.vin)) return;
 
         LOG.infof("SONAR reading: vin=%s dist=%.1fm closing=%.2fm/s",
                 msg.vin, msg.distanceMeters, msg.changeRateMps);
 
-        brakeService.processDistance(msg.vin, msg.distanceMeters, msg.changeRateMps);
+        brakeService.processDistance(msg.vin, msg.distanceMeters, msg.changeRateMps, msg.direction);
     }
 }
