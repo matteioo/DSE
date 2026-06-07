@@ -11,8 +11,19 @@ patches:
       kind: Ingress
       name: d2s-ingress
 
+  # Always pull from GCR so a pod restart on any node picks up the latest push,
+  # not a stale layer cached from a previous deploy.
+  - patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Always
+    target:
+      kind: Deployment
+
 # Rewrite local image names to GCR paths.
-# deploy-gke.sh substitutes PROJECT_ID at apply time.
+# "PROJECT_ID" is a literal placeholder — deploy-gke.sh pipes the kustomize output
+# through `sed "s|gcr.io/PROJECT_ID|gcr.io/$GCP_PROJECT|g"` before kubectl apply,
+# so the actual project ID is never stored in git.
 images:
   - name: brakenow
     newName: gcr.io/PROJECT_ID/brakenow

@@ -28,6 +28,8 @@ spec:
     - name: stomp-ws
       port: 15674
 ---
+# RabbitMQ is a Deployment (not StatefulSet) with no PVC — queue state is lost on
+# pod restart. This is acceptable for a demo system where scenarios are short-lived.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
