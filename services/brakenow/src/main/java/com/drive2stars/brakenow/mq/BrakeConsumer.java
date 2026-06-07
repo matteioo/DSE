@@ -50,6 +50,6 @@ public class BrakeConsumer {
             "Received emergency brake message from %s for VIN %s (%s): active=%b, conditionTriggered=%s",
             msg.source, msg.vin, msg.timestamp, msg.active, msg.conditionTriggered);
 
-    brakeService.processBrake(msg.vin, msg.active, msg.timestamp);
+    brakeService.processBrake(msg.vin, msg.active, msg.conditionTriggered, msg.timestamp);
   }
 }

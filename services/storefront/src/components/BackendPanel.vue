@@ -19,7 +19,7 @@ function fmtTime(ts: string): string {
 }
 
 function levelMod(level: string): string {
-  if (level === 'WARN') return 'warn'
+  if (level === 'WARNING') return 'warn'
   if (level === 'ERROR') return 'error'
   return 'info'
 }

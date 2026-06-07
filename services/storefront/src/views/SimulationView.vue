@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue'
+import { computed, onMounted, onUnmounted } from 'vue'
 import { useSimulationStore } from '@/stores/simulation'
 import RoadView from '@/components/RoadView.vue'
 import VehicleCard from '@/components/VehicleCard.vue'
 import BackendPanel from '@/components/BackendPanel.vue'
 
 const store = useSimulationStore()
+
+const sortedVehicles = computed(() =>
+  [...store.vehicles].sort((a, b) => a.vin.localeCompare(b.vin))
+)
 
 onMounted(() => store.startPolling())
 onUnmounted(() => store.stopPolling())
@@ -24,14 +28,14 @@ onUnmounted(() => store.stopPolling())
 
       <section class="section">
         <h2 class="section-title">Road</h2>
-        <RoadView :vehicles="store.vehicles" />
+        <RoadView :vehicles="sortedVehicles" />
       </section>
 
       <section class="section">
         <h2 class="section-title">Vehicle Data</h2>
         <div class="vehicles-grid">
           <VehicleCard
-            v-for="v in store.vehicles"
+            v-for="v in sortedVehicles"
             :key="v.vin"
             :vehicle="store.vehicleDetails[v.vin] ?? v"
           />
@@ -41,7 +45,7 @@ onUnmounted(() => store.stopPolling())
       <section class="section">
         <h2 class="section-title">Backend Microservices</h2>
         <BackendPanel
-          :vehicles="store.vehicles"
+          :vehicles="sortedVehicles"
           :event-log="store.events"
         />
       </section>

@@ -61,12 +61,7 @@ function fmtDist(d: number | null): string {
         <span class="lbl">Emergency Brake</span>
         <span class="val">{{ vehicle.emergencyBrakeActive ? 'ACTIVE' : '—' }}</span>
       </div>
-      <div class="row">
-        <span class="lbl">Pre-Emergency Brake</span>
-        <span class="val">
-          {{ vehicle.preEmergencyBrake ? 'ACTIVE' : '—' }}
-        </span>
-      </div>
+
     </div>
   </div>
 </template>

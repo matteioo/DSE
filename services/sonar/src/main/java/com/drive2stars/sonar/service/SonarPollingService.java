@@ -159,6 +159,10 @@ public class SonarPollingService {
         .divide(elapsedSeconds, 2, RoundingMode.HALF_UP);
   }
 
+  public List<SonarReadingDto> getAllLatestReadings() {
+    return List.copyOf(latestReadings.values());
+  }
+
   private static String key(String vin, String direction) {
     return vin + "|" + direction;
   }
