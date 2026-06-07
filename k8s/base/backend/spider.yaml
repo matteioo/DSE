@@ -19,8 +19,6 @@ spec:
             - containerPort: 8080
               name: http
           env:
-            - name: UTRACKED_URL
-              value: http://utracked:8080
             - name: ORCHESTRATOR_GRPC_HOST
               value: orchestrator
             - name: ORCHESTRATOR_GRPC_PORT
@@ -28,6 +26,10 @@ spec:
             - name: UTRACKED_GRPC_HOST
               value: utracked
             - name: UTRACKED_GRPC_PORT
+              value: "9000"
+            - name: SONAR_GRPC_HOST
+              value: sonar-backend
+            - name: SONAR_GRPC_PORT
               value: "9000"
           livenessProbe:
             httpGet:

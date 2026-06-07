@@ -18,6 +18,8 @@ spec:
           ports:
             - containerPort: 8080
               name: http
+            - containerPort: 9000
+              name: grpc
           env:
             - name: RABBITMQ_HOST
               valueFrom:
@@ -35,6 +37,8 @@ spec:
               value: "true"
             - name: SONAR_BACKEND_DISTANCE_QUEUE_NAME
               value: sonar.distance.backend
+            - name: GRPC_PORT
+              value: "9000"
           livenessProbe:
             httpGet:
               path: /q/health/live
@@ -68,3 +72,6 @@ spec:
     - port: 8080
       targetPort: 8080
       name: http
+    - port: 9000
+      targetPort: 9000
+      name: grpc

@@ -1,0 +1,33 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+# Rewrite local image names to GCR paths.
+# deploy-gke.sh substitutes PROJECT_ID at apply time.
+images:
+  - name: brakenow
+    newName: gcr.io/PROJECT_ID/brakenow
+    newTag: latest
+  - name: orchestrator
+    newName: gcr.io/PROJECT_ID/orchestrator
+    newTag: latest
+  - name: simulator
+    newName: gcr.io/PROJECT_ID/simulator
+    newTag: latest
+  - name: sonar
+    newName: gcr.io/PROJECT_ID/sonar
+    newTag: latest
+  - name: spider
+    newName: gcr.io/PROJECT_ID/spider
+    newTag: latest
+  - name: utracked
+    newName: gcr.io/PROJECT_ID/utracked
+    newTag: latest
+  - name: whereami
+    newName: gcr.io/PROJECT_ID/whereami
+    newTag: latest
+  - name: storefront
+    newName: gcr.io/PROJECT_ID/storefront
+    newTag: latest
