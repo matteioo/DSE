@@ -32,7 +32,7 @@ public class SonarGrpcAdapter {
                 .toList();
     }
 
-    List<SonarReadingDto> getLatestReadingsFallback(Throwable cause) {
+    public List<SonarReadingDto> getLatestReadingsFallback(Throwable cause) {
         LOG.warnf("Falling back to empty sonar readings: %s", cause.getMessage());
         return List.of();
     }
