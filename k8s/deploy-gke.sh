@@ -1,16 +1,29 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+ENV_FILE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.env"
+if [ -f "$ENV_FILE" ]; then
+  # shellcheck source=/dev/null
+  set -a; source "$ENV_FILE"; set +a
+fi
+
 if [ -z "${GCP_PROJECT:-}" ]; then
-  echo "Error: GCP_PROJECT is not set."
-  echo "  export GCP_PROJECT=your-gcp-project-id"
+  echo "Error: GCP_PROJECT is not set. Copy k8s/.env.example to k8s/.env and fill in your values."
+  exit 1
+fi
+if [ -z "${GKE_CLUSTER:-}" ]; then
+  echo "Error: GKE_CLUSTER is not set. Copy k8s/.env.example to k8s/.env and fill in your values."
+  exit 1
+fi
+if [ -z "${DEPLOY_DOMAIN:-}" ]; then
+  echo "Error: DEPLOY_DOMAIN is not set. Copy k8s/.env.example to k8s/.env and fill in your values."
   exit 1
 fi
 
 CURRENT_CONTEXT=$(kubectl config current-context 2>/dev/null || true)
 if [[ "$CURRENT_CONTEXT" == "minikube" ]]; then
   echo "Error: kubectl context is 'minikube' — refusing to run GKE deploy."
-  echo "  Switch with: kubectl config use-context gke_${GCP_PROJECT}_europe-west1-b_YOUR_CLUSTER"
+  echo "  Switch with: kubectl config use-context gke_${GCP_PROJECT}_europe-west1-b_${GKE_CLUSTER}"
   exit 1
 fi
 
@@ -22,6 +35,7 @@ TAG="${TAG:-latest}"
 echo "==> Project : $GCP_PROJECT"
 echo "==> Registry: $REGISTRY"
 echo "==> Tag     : $TAG"
+echo "==> Domain  : $DEPLOY_DOMAIN"
 echo ""
 
 echo "==> Authenticating Docker with GCR..."
@@ -34,6 +48,7 @@ echo "==> All images pushed."
 echo "==> Applying Kubernetes manifests..."
 kubectl kustomize "$SCRIPT_DIR/overlays/gke" \
   | sed "s|gcr.io/PROJECT_ID|$REGISTRY|g" \
+  | sed "s|DEPLOY_DOMAIN|$DEPLOY_DOMAIN|g" \
   | kubectl apply --server-side --force-conflicts -f -
 
 # Delete all non-postgres pods so GKE recreates them and pulls fresh images.
@@ -63,5 +78,5 @@ echo ""
 if [ -n "$STATIC_IP" ]; then
   echo "==> Static IP  : $STATIC_IP"
 fi
-echo "==> Frontend   : https://example.com"
+echo "==> Frontend   : https://$DEPLOY_DOMAIN"
 echo "    (HTTPS cert provisioning takes 10-20 min after DNS propagates)"

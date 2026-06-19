@@ -265,26 +265,36 @@ kubectl kustomize k8s/overlays/gke | sed "s|gcr.io/PROJECT_ID|gcr.io/$GCP_PROJEC
 
 1. A GCP project with billing enabled and GKE API active
 2. `gcloud` CLI authenticated: `gcloud auth login && gcloud auth application-default login`
-3. A GKE Standard cluster (not Autopilot) named `YOUR_CLUSTER` in `europe-west1-b`:
+3. A domain name pointed at the static IP (see step 5) — **required** for the GKE managed TLS certificate
+   Just get some very cheap domain for testing purposes. This project is a lot cooler with HTTPS 😎
+4. A GKE Standard cluster (not Autopilot) named after your `GKE_CLUSTER` in `europe-west1-b`:
    ```bash
-   gcloud container clusters create YOUR_CLUSTER \
+   gcloud container clusters create <your-cluster-name> \
      --zone europe-west1-b \
      --num-nodes 3 \
      --machine-type e2-standard-2
    ```
-4. A static global IP reserved:
+5. A static global IP reserved:
    ```bash
    gcloud compute addresses create d2s-static-ip --global
+   gcloud compute addresses describe d2s-static-ip --global   # note this IP for your DNS record
    ```
-5. `kubectl` context pointed at the cluster:
+6. `kubectl` context pointed at the cluster:
    ```bash
-   gcloud container clusters get-credentials YOUR_CLUSTER --zone europe-west1-b
+   gcloud container clusters get-credentials <your-cluster-name> --zone europe-west1-b
+   ```
+7. `k8s/.env` configured — copy the example and fill in your values:
+   ```bash
+   cp k8s/.env.example k8s/.env
+   # then edit k8s/.env:
+   #   GCP_PROJECT  — your GCP project ID
+   #   GKE_CLUSTER  — the cluster name from step 4
+   #   DEPLOY_DOMAIN — your domain from step 3
    ```
 
 ### Deploy everything
 
 ```bash
-export GCP_PROJECT=your-gcp-project-id
 ./k8s/deploy-gke.sh
 ```
 
@@ -372,7 +382,6 @@ gcloud container clusters create YOUR_CLUSTER \
 gcloud container clusters get-credentials YOUR_CLUSTER --zone europe-west1-b
 
 # 3. Deploy everything (images are already in GCR, static IP is already reserved)
-export GCP_PROJECT=YOUR_GCP_PROJECT
 ./k8s/deploy-gke.sh
 ```
 
@@ -426,8 +435,7 @@ kubectl rollout restart deployment/vehicle-1-simulator
 
 **Re-deploy a single service** after rebuilding its image:
 ```bash
-# From repo root:
-export GCP_PROJECT=YOUR_GCP_PROJECT
+# From repo root (k8s/.env must be configured):
 docker buildx bake spider --push
 kubectl rollout restart deployment/spider
 kubectl rollout status deployment/spider

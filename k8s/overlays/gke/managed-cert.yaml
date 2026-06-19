@@ -4,4 +4,4 @@ metadata:
   name: d2s-cert-v2
 spec:
   domains:
-    - example.com
+    - DEPLOY_DOMAIN
